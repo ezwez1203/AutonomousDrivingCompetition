@@ -1,0 +1,11 @@
+# conda env: carla (Python 3.12)
+# Phase 0 essentials
+carla==0.9.16
+numpy>=1.26
+pyyaml>=6.0
+
+# Phase 2~3 perception extras, install only if needed
+# opencv-python>=4.9
+# scikit-learn>=1.4   # DBSCAN clustering
+# ultralytics>=8.0    # YOLOv8 for traffic lights and obstacles
+# matplotlib>=3.8     # visualization

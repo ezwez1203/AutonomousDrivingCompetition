@@ -1,0 +1,76 @@
+{
+  "image": "circuit_blueprint.png",
+  "track_yaml": "carla_autodrive/config/track.yaml",
+  "mask": "nonwhite",
+  "component": "largest",
+  "raw_mask_pixels": 548774,
+  "mask_pixels": 294709,
+  "mask_bbox_px": [
+    637,
+    291,
+    3409,
+    3303
+  ],
+  "field_mm": [
+    12000.0,
+    16000.0
+  ],
+  "tolerance_mm": 850.0,
+  "samples": 360,
+  "control_points": 24,
+  "before": {
+    "track_to_blueprint": {
+      "mean_px": 53.696148171685934,
+      "median_px": 27.472994635731695,
+      "p95_px": 164.2476122746247,
+      "max_px": 193.83275291513667,
+      "mean_mm": 256.1533603896765,
+      "median_mm": 131.05781579359186,
+      "p95_mm": 783.5306488950491,
+      "within_tolerance_percent": 98.33333333333333
+    },
+    "blueprint_to_track": {
+      "mean_px": 294.553671998044,
+      "median_px": 285.0868054502722,
+      "p95_px": 670.5068074573309,
+      "max_px": 955.1834328405859,
+      "mean_mm": 1405.1457221135074,
+      "median_mm": 1359.9847606453056,
+      "p95_mm": 3198.6013474410533,
+      "within_tolerance_percent": 34.925
+    },
+    "estimated_shape_accuracy_percent": 66.62916666666666,
+    "bidirectional_mean_error_mm": 830.6495412515919
+  },
+  "after_optimized_polyline": {
+    "track_to_blueprint": {
+      "mean_px": 7.189410604657473,
+      "median_px": 4.768566752231203,
+      "p95_px": 17.499333335169677,
+      "max_px": 94.22061938719743,
+      "mean_mm": 34.29653240146678,
+      "median_mm": 22.748082300447003,
+      "p95_mm": 83.4792287903145,
+      "within_tolerance_percent": 100.0
+    },
+    "blueprint_to_track": {
+      "mean_px": 244.7238459691804,
+      "median_px": 251.4861887465477,
+      "p95_px": 533.7006865809365,
+      "max_px": 864.8856169163897,
+      "mean_mm": 1167.4363552495188,
+      "median_mm": 1199.6955933049383,
+      "p95_mm": 2545.978230559029,
+      "within_tolerance_percent": 41.74
+    },
+    "estimated_shape_accuracy_percent": 70.87,
+    "bidirectional_mean_error_mm": 600.8664438254928
+  },
+  "out_yaml": "carla_autodrive/reports/track_fitted_safe24.yaml",
+  "applied": true,
+  "notes": [
+    "Orange overlay is the previous track; red overlay is the fitted track.",
+    "The YAML stores resampled control points, so final build accuracy can differ slightly from optimized polyline accuracy."
+  ],
+  "backup": "carla_autodrive/config/track.yaml.bak"
+}

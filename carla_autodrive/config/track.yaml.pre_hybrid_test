@@ -1,0 +1,80 @@
+# SKKU_AD_Track - image-derived track.yaml
+# Approximate values corrected from the input image f7d92563-5b09-4fa9-a600-f4012938a0a8.png.
+# Length units are measured millimeters; CARLA loading converts them to meters by the scale factor.
+# These control points are approximate because they were inferred from a raster image, not the original CAD/DXF.
+
+meta:
+  name: "SKKU_AD_Track"
+  scale: 10            # CARLA coordinate scale. Example: 850 mm x scale 10 -> 8.5 m.
+
+# Outer reference dimensions from the drawing: top 12000, left 16000.
+dimensions:
+  road_width_mm: 1700  # total two-lane width. The drawing shows 850 mm x 2 lanes.
+  lane_width_mm: 850   # width of one lane
+  lane_mark_mm: 50     # solid/dashed lane marking width
+  start_line_mm: 100
+  crosswalk_mm: [1000, 100]
+  parking_mm: [950, 1500]
+  field_mm: [12000, 16000]
+
+lanes:
+  # Inner lane is lane 1; outer lane is lane 2. Both drive counterclockwise.
+  # The reference line is the inner road boundary. Lanes expand to the right with negative ids.
+  count: 2
+  marks:
+    inner: "solid"     # inside of lane 1 (in line)
+    divider: "broken"  # divider between lanes 1 and 2 (dashed)
+    outer: "solid"     # outside of lane 2 (out line)
+
+# Closed curve extracted from the red inner boundary line in the drawing.
+# The start point is near the lower Start/T1 mark; travel direction is CCW.
+# control_points are approximate measured-mm coordinates; they are sampled with a Catmull-Rom spline before OpenDRIVE line geometry generation.
+centerline:
+  mode: "spline"
+  samples_per_segment: 16
+  tension: 0.5
+  control_points:
+    - { x: 5752, y: 2515 }   # Start/T1, bottom inner boundary
+    - { x: 6868, y: 2515 }
+    - { x: 8283, y: 2889 }
+    - { x: 9289, y: 3879 }
+    - { x: 9556, y: 4606 }
+    - { x: 9289, y: 6808 }
+    - { x: 8990, y: 9535 }
+    - { x: 8817, y: 11758 }
+    - { x: 8519, y: 12768 }
+    - { x: 7733, y: 13354 }
+    - { x: 6633, y: 13394 }
+    - { x: 5297, y: 13394 }
+    - { x: 3961, y: 13394 }
+    - { x: 3136, y: 13020 }
+    - { x: 2861, y: 12111 }
+    - { x: 3096, y: 10848 }
+    - { x: 3489, y: 9333 }
+    - { x: 3332, y: 7717 }
+    - { x: 2703, y: 6303 }
+    - { x: 2232, y: 4838 }
+    - { x: 2389, y: 3525 }
+    - { x: 3214, y: 2768 }
+    - { x: 4393, y: 2515 }
+
+# Mission elements are placed by s along the reference line in millimeters and by lane.
+# s values are approximate, reprojected to the nearest point on the image-derived reference line.
+elements:
+  start_line:    { s: 0,     lane: 2, note: "lower Start line / T1, 100 mm wide" }
+  laptimer_T1:   { s: 0,     note: "lower lap timer T1" }
+  laptimer_T2:   { s: 9100,  note: "right-side lap timer T2 approximate position" }
+  laptimer_T3:   { s: 14500, note: "upper lap timer T3 approximate position" }
+  laptimer_T4:   { s: 23000, note: "left-side lap timer T4 approximate position" }
+  crosswalk:     { s: 17000, note: "upper crosswalk approximate position, 1000x100" }
+  parking_zone1: { s: 10800, lane: 1, note: "upper-right perpendicular parking zone, 950x1500" }
+  parking_zone2: { s: 7600,  lane: 1, note: "lower-right perpendicular parking zone, 950x1500" }
+  obstacle_1:    { s: 4100,  lane: 1, note: "lower-right obstacle/mission box approximation" }
+  obstacle_2_presets:
+    - { s: 6900, lane: 1 }
+    - { s: 7600, lane: 1 }
+    - { s: 8300, lane: 1 }
+  obstacle_3_presets:
+    - { s: 9300, lane: 2 }
+    - { s: 10100, lane: 2 }
+    - { s: 10900, lane: 2 }

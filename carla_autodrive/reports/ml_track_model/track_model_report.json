@@ -1,0 +1,51 @@
+{
+  "image": "circuit_blueprint.png",
+  "model": "histgb",
+  "positive_mask": "nonwhite",
+  "positive_component": "largest",
+  "positive_pixels": 294709,
+  "negative_pixels": 12022042,
+  "samples_per_class": 50000,
+  "train_samples": 75000,
+  "validation_samples": 25000,
+  "validation_auc": 1.0,
+  "validation_report": {
+    "0": {
+      "precision": 1.0,
+      "recall": 0.99984,
+      "f1-score": 0.9999199935994879,
+      "support": 12500.0
+    },
+    "1": {
+      "precision": 0.9998400255959047,
+      "recall": 1.0,
+      "f1-score": 0.9999200063994881,
+      "support": 12500.0
+    },
+    "accuracy": 0.99992,
+    "macro avg": {
+      "precision": 0.9999200127979524,
+      "recall": 0.9999199999999999,
+      "f1-score": 0.999919999999488,
+      "support": 25000.0
+    },
+    "weighted avg": {
+      "precision": 0.9999200127979524,
+      "recall": 0.99992,
+      "f1-score": 0.9999199999994881,
+      "support": 25000.0
+    }
+  },
+  "prob_threshold": 0.45,
+  "prediction_positive_pixels": 568620,
+  "outputs": {
+    "model": "carla_autodrive/reports/ml_track_model/track_pixel_model.pkl",
+    "probability": "carla_autodrive/reports/ml_track_model/track_probability.png",
+    "mask": "carla_autodrive/reports/ml_track_model/track_prediction_mask.png",
+    "overlay": "carla_autodrive/reports/ml_track_model/track_model_overlay.png"
+  },
+  "notes": [
+    "This is weak supervision from pseudo-labels, not ground-truth CAD labels.",
+    "Use track_probability.png with fit_track_from_blueprint --probability-mask."
+  ]
+}

@@ -1,0 +1,120 @@
+meta:
+  name: SKKU_AD_Track
+  scale: 10
+dimensions:
+  road_width_mm: 1700
+  lane_width_mm: 850
+  lane_mark_mm: 50
+  start_line_mm: 100
+  crosswalk_mm:
+  - 1000
+  - 100
+  parking_mm:
+  - 950
+  - 1500
+  field_mm:
+  - 12000
+  - 16000
+lanes:
+  count: 2
+  marks:
+    inner: solid
+    divider: broken
+    outer: solid
+centerline:
+  mode: spline
+  samples_per_segment: 16
+  tension: 0.5
+  control_points:
+  - x: 5752
+    y: 2486
+  - x: 6971
+    y: 2474
+  - x: 8361
+    y: 2898
+  - x: 9307
+    y: 3954
+  - x: 9530
+    y: 4846
+  - x: 9330
+    y: 6879
+  - x: 9147
+    y: 9307
+  - x: 9066
+    y: 11357
+  - x: 8675
+    y: 12398
+  - x: 8023
+    y: 13152
+  - x: 6969
+    y: 13421
+  - x: 5585
+    y: 13406
+  - x: 4200
+    y: 13430
+  - x: 3200
+    y: 13110
+  - x: 2742
+    y: 12164
+  - x: 3012
+    y: 10897
+  - x: 3282
+    y: 9390
+  - x: 3482
+    y: 7983
+  - x: 2851
+    y: 6607
+  - x: 2499
+    y: 5126
+  - x: 2482
+    y: 3781
+  - x: 3146
+    y: 2844
+  - x: 4350
+    y: 2469
+elements:
+  start_line:
+    s: 0
+    lane: 2
+    note: lower Start line / T1, 100 mm wide
+  laptimer_T1:
+    s: 0
+    note: lower lap timer T1
+  laptimer_T2:
+    s: 9100
+    note: right-side lap timer T2 approximation position
+  laptimer_T3:
+    s: 14500
+    note: upper lap timer T3 approximation position
+  laptimer_T4:
+    s: 23000
+    note: left-side lap timer T4 approximation position
+  crosswalk:
+    s: 17000
+    note: upper crosswalk 1000x100 approximation position
+  parking_zone1:
+    s: 10800
+    lane: 1
+    note: right-side upper perpendicular parking zone 950x1500
+  parking_zone2:
+    s: 7600
+    lane: 1
+    note: right-side lower perpendicular parking zone 950x1500
+  obstacle_1:
+    s: 4100
+    lane: 1
+    note: lower-right obstacle/mission box approximation
+  obstacle_2_presets:
+  - s: 6900
+    lane: 1
+  - s: 7600
+    lane: 1
+  - s: 8300
+    lane: 1
+  obstacle_3_presets:
+  - s: 9300
+    lane: 2
+  - s: 10100
+    lane: 2
+  - s: 10900
+    lane: 2

@@ -1,0 +1,58 @@
+{
+  "image": "circuit_blueprint.png",
+  "track_yaml": "carla_autodrive/reports/track_hybrid_40.yaml",
+  "mask": "nonwhite",
+  "component": "largest",
+  "image_size_px": [
+    3995,
+    3548
+  ],
+  "raw_mask_pixels": 548774,
+  "mask_pixels": 294709,
+  "mask_bbox_px": [
+    637,
+    291,
+    3409,
+    3303
+  ],
+  "field_mm": [
+    12000.0,
+    16000.0
+  ],
+  "track_total_length_m": 323.29700412846336,
+  "track_samples": 324,
+  "px_per_mm": {
+    "x": 0.231,
+    "y": 0.18825,
+    "average": 0.209625
+  },
+  "tolerance_mm": 850.0,
+  "tolerance_px": 178.18125,
+  "track_to_blueprint": {
+    "mean_px": 37.62388096975595,
+    "median_px": 21.625812037550695,
+    "p95_px": 115.37070138754363,
+    "max_px": 166.17683300138722,
+    "mean_mm": 179.48184123914587,
+    "median_mm": 103.16427924890016,
+    "p95_mm": 550.3670906978825,
+    "within_tolerance_percent": 100.0
+  },
+  "blueprint_to_track": {
+    "mean_px": 286.02850910534767,
+    "median_px": 298.13126935313255,
+    "p95_px": 631.8385057610233,
+    "max_px": 969.4874322690038,
+    "mean_mm": 1364.4770857738708,
+    "median_mm": 1422.2123761628268,
+    "p95_mm": 3014.1371771545532,
+    "within_tolerance_percent": 37.330000000000005
+  },
+  "estimated_shape_accuracy_percent": 68.665,
+  "bidirectional_mean_error_mm": 771.9794635065084,
+  "notes": [
+    "Accuracy is based on nearest-pixel distance after fitting track.yaml field_mm to the extracted mask bbox.",
+    "Use --mask green/red/dark/nonwhite if the selected blueprint layer is not the intended reference line.",
+    "This is not CAD validation; final judgement should use official CAD/DXF coordinates when available."
+  ]
+}

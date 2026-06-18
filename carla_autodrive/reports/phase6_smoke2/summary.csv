@@ -1,0 +1,2 @@
+avg_speed_mps,completed,cte_warning_excess_m,curve_lookahead,curve_max_lat_acc,distance_m,finish_reason,max_abs_cte_m,max_speed_mps,mean_abs_cte_m,mission,report,run,score,sim_time_s,status,steer_speed_gain,target_speed_mps,time_limit_excess_s
+0.6782997116468683,False,0.0,8.0,0.45,0.0,tick_or_duration_limit,8.22383150380072e-07,1.9600002765655518,8.22383150380072e-07,time_trial,carla_autodrive/reports/phase6_smoke2/run001_time_trial_v1_acc0p45_look8_steer2p2.json,1,1.0,0.5,ok,2.2,1.0,0.0

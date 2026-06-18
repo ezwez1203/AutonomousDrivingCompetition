@@ -1,0 +1,20 @@
+# track_yaml_pipeline.py default config example
+# See the README for runnable examples.
+image: f7d92563-5b09-4fa9-a600-f4012938a0a8.png
+field_mm: [16000, 12000]
+road_width_mm: 850
+reference: inner
+coarse_spacing_mm: 1000
+target_spacing_mm: 10
+mask:
+  hsv_sat_min: 6
+  hsv_val_min: 80
+  red_delta: 4
+  dilate_px: 3
+refinement:
+  search_width_factor: 1.0
+  snap_radius_mm: 60
+  smoothing_passes: 1
+outputs:
+  yaml: track_generated_pipeline.yaml
+  overlay: track_generated_pipeline_overlay.png

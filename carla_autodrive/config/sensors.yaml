@@ -1,0 +1,79 @@
+# Sensor settings based on the 2026-06-05 vehicle parts list.
+# position: [x, y, z] (m, vehicle frame / x=forward, y=right-side, z=upward)
+# rotation: [roll, pitch, yaw] (deg)
+
+physical_inventory:
+  camera_total: 4
+  lidar_total: 2
+  ultrasonic_total: 12
+  traffic_light_sensor_total: 1
+  note: "For now, the simulator input uses one front camera, one 2D LiDAR, and twelve radar sensors as a rough stand-in for ultrasonic sensors."
+
+camera:
+  type: "sensor.camera.rgb"
+  image_size_x: 640
+  image_size_y: 480
+  fov: 90
+  position: [0.5, 0.0, 0.5]   # upper front-center of the vehicle
+  rotation: [0.0, -15.0, 0.0] # pitch -15 → tilted slightly downward
+  sensor_tick: 0.0            # 0 = every simulator frame
+
+lidar:
+  type: "sensor.lidar.ray_cast"
+  model: "RPLIDAR A1M8"
+  channels: 1                  # A1M8 2D 360-degree LiDAR approximation
+  range: 12.0
+  points_per_second: 8000
+  rotation_frequency: 10
+  upper_fov: 1.0
+  lower_fov: -1.0
+  position: [0.0, 0.0, 0.45]
+  rotation: [0.0, 0.0, 0.0]
+
+# Radar substitutes for 12 ultrasonic sensors from the real-vehicle parts list, laid out around the perimeter.
+radar:
+  type: "sensor.other.radar"
+  model: "ultrasonic_approximation"
+  physical_sensor_count: 12
+  horizontal_fov: 22
+  vertical_fov: 8
+  range: 1.5                  # short-range parking use (m)
+  points_per_second: 800
+  sensor_tick: 0.0
+  position_variants:
+    - name: "front_center"
+      position: [0.48, 0.0, 0.2]
+      rotation: [0.0, 0.0, 0.0]
+    - name: "front_left"
+      position: [0.42, -0.25, 0.2]
+      rotation: [0.0, 0.0, -25.0]
+    - name: "front_right"
+      position: [0.42, 0.25, 0.2]
+      rotation: [0.0, 0.0, 25.0]
+    - name: "rear_center"
+      position: [-0.48, 0.0, 0.2]
+      rotation: [0.0, 0.0, 180.0]
+    - name: "rear_left"
+      position: [-0.42, -0.25, 0.2]
+      rotation: [0.0, 0.0, -155.0]
+    - name: "rear_right"
+      position: [-0.42, 0.25, 0.2]
+      rotation: [0.0, 0.0, 155.0]
+    - name: "left_front"
+      position: [0.22, -0.34, 0.2]
+      rotation: [0.0, 0.0, -90.0]
+    - name: "left_mid"
+      position: [0.0, -0.36, 0.2]
+      rotation: [0.0, 0.0, -90.0]
+    - name: "left_rear"
+      position: [-0.22, -0.34, 0.2]
+      rotation: [0.0, 0.0, -90.0]
+    - name: "right_front"
+      position: [0.22, 0.34, 0.2]
+      rotation: [0.0, 0.0, 90.0]
+    - name: "right_mid"
+      position: [0.0, 0.36, 0.2]
+      rotation: [0.0, 0.0, 90.0]
+    - name: "right_rear"
+      position: [-0.22, 0.34, 0.2]
+      rotation: [0.0, 0.0, 90.0]

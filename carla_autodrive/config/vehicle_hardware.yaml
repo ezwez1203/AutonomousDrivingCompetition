@@ -1,0 +1,274 @@
+# Vehicle hardware baseline from the 2026-06-05 purchase list photo.
+#
+# This file records the real-car parts assumption separately from simulator
+# parameters.  The simulator still consumes sensors.yaml and hardware_limits.yaml.
+
+metadata:
+  source: "KakaoTalk_20260616_180331071.jpg"
+  source_date: "2026-06-05"
+  list_title: "kids electric car required design parts list"
+  currency: "KRW"
+  photo_total_amount: 5235570
+  photo_shipping_amount: 20200
+  photo_grand_total_amount: 5255770
+  note: "Some rows are partly obscured by folds or check marks, so the quantities and prices should be rechecked before purchasing."
+
+platform:
+  vehicle:
+    item: "kids electric car"
+    option: "white + wheel cover"
+    quantity_total: 2
+    per_vehicle: 1
+  enclosure:
+    item: "Neo Box 19L"
+    option: "translucent"
+    quantity_total: 2
+    per_vehicle: 1
+  battery:
+    item: "battery"
+    quantity_total: 2
+    per_vehicle: 1
+  mechanical_mounts:
+    - item: "tripod"
+      quantity_total: 2
+      per_vehicle: 1
+    - item: "precision nipper"
+      quantity_total: 2
+      shared_tool: true
+    - item: "precision screwdriver set"
+      option: "50Pcs"
+      quantity_total: 2
+      shared_tool: true
+
+compute_and_control:
+  controller:
+    item: "Arduino Mega"
+    quantity_total: 2
+    per_vehicle: 1
+  motor_driver:
+    item: "motor driver"
+    quantity_total: 6
+    per_vehicle_assumption: 3
+    note: "Before wiring the real car, confirm each channel role and the PWM/direction pin mapping."
+  power_distribution:
+    - item: "Arduino power cable"
+      quantity_total: 2
+      per_vehicle: 1
+    - item: "Arduino power hub module"
+      quantity_total: 2
+      per_vehicle: 1
+    - item: "power supply power cable"
+      quantity_total: 2
+      per_vehicle: 1
+    - item: "3-outlet power strip"
+      quantity_total: 2
+      per_vehicle: 1
+    - item: "SMPS power supply"
+      option: "AC-to-DC converter"
+      quantity_total: 2
+      per_vehicle: 1
+      required_voltage_v: 12.0
+      boost_allowed: false
+  wiring:
+    - item: "copper wire"
+      option: "100M, 18AWG, 0.8sq"
+      quantity_total: 1
+      shared_spool: true
+    - item: "5-pin cable"
+      option: "black"
+      quantity_total: 2
+      per_vehicle: 1
+    - item: "jumper cable MF"
+      quantity_total: 4
+    - item: "jumper cable FF"
+      quantity_total: 4
+    - item: "jumper cable MM"
+      quantity_total: 4
+    - item: "USBhub"
+      quantity_total: 2
+      per_vehicle: 1
+
+sensors:
+  camera:
+    item: "camera"
+    quantity_total: 4
+    per_vehicle_assumption: 2
+    simulator_active_count: 1
+    note: "For now, the perception pipeline uses one front RGB camera as its default input."
+  lidar:
+    item: "RPLIDAR A1M8 360-degree LiDAR sensor"
+    quantity_total: 2
+    per_vehicle: 1
+    simulator_model: "2D 360-degree ray-cast approximation"
+  ultrasonic:
+    item: "ultrasonic sensor"
+    quantity_total: 12
+    per_vehicle_assumption: 6
+    simulator_model: "short-range radar approximation"
+  traffic_light_sensor:
+    item: "traffic-light sensor"
+    quantity_total: 1
+    shared_track_asset: true
+
+track_assets:
+  driving_track:
+    item: "driving track"
+    quantity_total: 1
+  traffic_light_truss:
+    item: "traffic-light truss"
+    quantity_total: 1
+  masking_tape:
+    item: "masking tape"
+    option: "green, 48mm x 40M"
+    quantity_total_from_photo: 1
+    review_needed: true
+
+inventory_rows:
+  - no: 1
+    name: "Arduino power cable"
+    quantity: 2
+    unit_price: 1100
+    amount: 2200
+  - no: 2
+    name: "Arduino power hub module"
+    quantity: 2
+    unit_price: 2640
+    amount: 5280
+  - no: 3
+    name: "power supply power cable"
+    quantity: 2
+    unit_price: 25300
+    amount: 50600
+  - no: 4
+    name: "motor driver"
+    quantity: 6
+    unit_price: 24090
+    amount: 144540
+  - no: 5
+    name: "3-outlet power strip"
+    quantity: 2
+    unit_price: 13750
+    amount: 27500
+  - no: 6
+    name: "insulating tape"
+    quantity: 2
+    unit_price: 2145
+    amount: 4290
+  - no: 7
+    name: "Arduino potentiometer module"
+    quantity: 2
+    unit_price: 2365
+    amount: 4730
+  - no: 8
+    name: "precision screwdriver set"
+    option: "50Pcs"
+    quantity: 2
+    unit_price: 15345
+    amount: 30690
+  - no: 9
+    name: "jumper cable MF"
+    quantity: 4
+    unit_price: 900
+    amount: 3600
+  - no: 10
+    name: "jumper cable FF"
+    quantity: 4
+    unit_price: 900
+    amount: 3600
+  - no: 11
+    name: "jumper cable MM"
+    quantity: 4
+    unit_price: 900
+    amount: 3600
+  - no: 12
+    name: "Arduino Mega"
+    quantity: 2
+    unit_price: 19000
+    amount: 38000
+  - no: 13
+    name: "5-pin cable"
+    option: "black"
+    quantity: 2
+    unit_price: 6900
+    amount: 13800
+  - no: 14
+    name: "copper wire"
+    option: "100M - 18AWG (0.8sq)"
+    quantity: 1
+    unit_price: 72680
+    amount: 72680
+  - no: 15
+    name: "kids electric car"
+    option: "white + wheel cover"
+    quantity: 2
+    unit_price: 198000
+    amount: 396000
+  - no: 16
+    name: "Neo Box 19L"
+    option: "translucent"
+    quantity: 2
+    unit_price: 16410
+    amount: 32820
+  - no: 17
+    name: "precision nipper"
+    quantity: 2
+    unit_price: 1290
+    amount: 2580
+  - no: 18
+    name: "ultrasonic sensor"
+    quantity: 12
+    unit_price: 1310
+    amount: 15720
+  - no: 19
+    name: "battery"
+    quantity: 2
+    unit_price: 399000
+    amount: 798000
+  - no: 20
+    name: "tripod"
+    quantity: 2
+    unit_price: 12240
+    amount: 24480
+  - no: 21
+    name: "camera"
+    quantity: 4
+    unit_price: 79900
+    amount: 319600
+  - no: 22
+    name: "traffic-light sensor"
+    quantity: 1
+    unit_price: 210000
+    amount: 210000
+  - no: 23
+    name: "masking tape"
+    option: "green, 48mm x 40M"
+    quantity: 1
+    unit_price: 3890
+    amount: 3890
+    review_needed: true
+  - no: 24
+    name: "SMPS power supply"
+    option: "AC-to-DC converter"
+    quantity: 2
+    unit_price: 61950
+    amount: 123900
+  - no: 25
+    name: "RPLIDAR A1M8 360-degree LiDAR sensor"
+    quantity: 2
+    unit_price: 202700
+    amount: 405400
+  - no: 26
+    name: "USBhub"
+    quantity: 2
+    unit_price: 37440
+    amount: 74880
+  - no: 27
+    name: "driving track"
+    quantity: 1
+    unit_price: 1870000
+    amount: 1870000
+  - no: 28
+    name: "traffic-light truss"
+    quantity: 1
+    unit_price: 550000
+    amount: 550000

@@ -1,0 +1,57 @@
+{
+  "image": "circuit_blueprint.png",
+  "mask": "nonwhite",
+  "component": "largest",
+  "image_size_px": [
+    3995,
+    3548
+  ],
+  "raw_mask_pixels": 548774,
+  "mask_pixels": 294709,
+  "mask_bbox_px": [
+    637,
+    291,
+    3409,
+    3303
+  ],
+  "field_mm": [
+    12000.0,
+    16000.0
+  ],
+  "track_total_length_m": 440.5515661408493,
+  "track_samples": 441,
+  "px_per_mm": {
+    "x": 0.231,
+    "y": 0.18825,
+    "average": 0.209625
+  },
+  "tolerance_mm": 850.0,
+  "tolerance_px": 178.18125,
+  "track_to_blueprint": {
+    "mean_px": 21.26877214089367,
+    "median_px": 14.780437169264447,
+    "p95_px": 63.79906355263467,
+    "max_px": 97.86838647040366,
+    "mean_mm": 101.46104778005328,
+    "median_mm": 70.50894296607964,
+    "p95_mm": 304.34854407935444,
+    "within_tolerance_percent": 100.0
+  },
+  "blueprint_to_track": {
+    "mean_px": 216.52787570176068,
+    "median_px": 211.61764308444964,
+    "p95_px": 463.61521446419584,
+    "max_px": 838.4327299540619,
+    "mean_mm": 1032.929639602913,
+    "median_mm": 1009.5057511482391,
+    "p95_mm": 2211.6408561201947,
+    "within_tolerance_percent": 45.155
+  },
+  "estimated_shape_accuracy_percent": 72.5775,
+  "bidirectional_mean_error_mm": 567.1953436914832,
+  "notes": [
+    "Accuracy is based on nearest-pixel distance after fitting track.yaml field_mm to the extracted mask bbox.",
+    "Use --mask green/red/dark/nonwhite if the selected blueprint layer is not the intended reference line.",
+    "This is not CAD validation; final judgement should use official CAD/DXF coordinates when available."
+  ]
+}

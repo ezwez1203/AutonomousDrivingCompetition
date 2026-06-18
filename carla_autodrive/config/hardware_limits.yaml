@@ -1,0 +1,29 @@
+# Hardware safety limits derived from contest_rules.md, simulator tuning, and
+# the 2026-06-05 vehicle parts list photo.
+#
+# The photo confirms Arduino Mega, motor drivers, battery, wiring, and 12.0V
+# SMPS-based power.  Confirm the motor driver/Arduino PWM pin mapping on the
+# bench before running on the real vehicle.
+
+power:
+  smps_voltage_v: 12.0
+  allow_voltage_boost: false
+
+motor_driver:
+  controller: "Arduino Mega"
+  drivers_total: 6
+  drivers_per_vehicle_assumption: 3
+  pwm_min: 0
+  pwm_max: 255
+  current_limit_a: null          # Not visible in the photo; fill after bench measurement.
+  driver_protection_enabled: true
+  wiring:
+    power_wire: "18AWG copper wire, 0.8sq"
+    control_cables: ["5-pin cable", "jumper MF", "jumper FF", "jumper MM"]
+
+control_clamp:
+  enabled: true
+  max_throttle_cmd: 0.45         # CARLA throttle scale 0.0~1.0; current tuned safe default.
+  max_reverse_cmd: 0.45          # Keep simulator behavior until real reverse PWM is measured.
+  max_brake_cmd: 0.75
+  max_accel_delta_per_sec: 3.0   # Throttle command slew-rate limit.

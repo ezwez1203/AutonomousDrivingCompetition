@@ -1,0 +1,25 @@
+# CARLA simulator connection and world settings
+client:
+  host: "127.0.0.1"
+  port: 2000
+  timeout: 20.0          # server connection timeout in seconds
+
+world:
+  # If null, keep the currently loaded map. Phase 1 can swap in the custom map.
+  map: null              # for example: "Town01", "Town05"
+  synchronous_mode: true # Synchronous mode gives tighter sensor frame alignment and is useful for headless tests.
+  fixed_delta_seconds: 0.05  # one synchronous step at 20 FPS
+
+vehicle:
+  # Temporary vehicle blueprint for the 1/5-scale electric car, adjusted later as needed.
+  blueprint: "vehicle.tesla.model3"
+  spawn_index: 0         # world.get_map().get_spawn_points() index. If null, choose randomly.
+
+phase0:
+  duration: 20.0         # demo duration in seconds
+  control_mode: "throttle"  # "throttle" for fixed throttle, or "autopilot" for Traffic Manager driving.
+  throttle: 0.08         # throttle value when control_mode=throttle; kept low for OpenDRIVE smoke tests.
+  steer: 0.0             # steering value when control_mode=throttle (-1.0 to 1.0).
+  brake: 0.0             # brake value when control_mode=throttle (0.0 to 1.0).
+  attach_radar: true     # Include radar in the basic Phase 0 sensor-spawn validation.
+  log_interval: 1.0      # sensor summary log interval in seconds

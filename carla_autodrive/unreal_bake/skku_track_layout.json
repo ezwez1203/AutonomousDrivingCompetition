@@ -1,0 +1,147 @@
+{
+  "meta": {
+    "name": "SKKU_AD_Track",
+    "scale": 10.0,
+    "units": "CARLA meters for x/y/z/length/width; Unreal centimeters after conversion"
+  },
+  "dimensions": {
+    "road_width": 8.5,
+    "lane_width": 4.25,
+    "total_length": 399.3881001406993
+  },
+  "zones": [
+    {
+      "name": "start_line",
+      "kind": "lap",
+      "pose": {
+        "x": 5.8836975021787445,
+        "y": 23.94238298688491,
+        "z": 0.05,
+        "yaw_deg": -75.59046563028906,
+        "s": 0.0,
+        "lane": null
+      },
+      "length": 1.0,
+      "width": 8.5,
+      "height": 1.5
+    },
+    {
+      "name": "laptimer_T4",
+      "kind": "lap",
+      "pose": {
+        "x": 44.774189888107,
+        "y": 102.54381581439303,
+        "z": 0.05,
+        "yaw_deg": 151.45767006246805,
+        "s": 299.9999999999999,
+        "lane": null
+      },
+      "length": 1.0,
+      "width": 8.5,
+      "height": 1.5
+    },
+    {
+      "name": "crosswalk",
+      "kind": "traffic",
+      "pose": {
+        "x": 107.15398416925086,
+        "y": 95.3745614577123,
+        "z": 0.05,
+        "yaw_deg": -173.8440608839525,
+        "s": 224.99999999999994,
+        "lane": null
+      },
+      "length": 1.0,
+      "width": 10.0,
+      "height": 1.5
+    },
+    {
+      "name": "parking_zone1",
+      "kind": "parking",
+      "pose": {
+        "x": 145.23861541875368,
+        "y": 63.238431033940586,
+        "z": 0.05,
+        "yaw_deg": 102.10092194181999,
+        "s": 174.99999999999994,
+        "lane": 1
+      },
+      "length": 15.0,
+      "width": 9.5,
+      "height": 1.5
+    },
+    {
+      "name": "parking_zone2",
+      "kind": "parking",
+      "pose": {
+        "x": 135.71480348355567,
+        "y": 81.78778997176622,
+        "z": 0.05,
+        "yaw_deg": 132.1604242752111,
+        "s": 194.99999999999991,
+        "lane": 1
+      },
+      "length": 15.0,
+      "width": 9.5,
+      "height": 1.5
+    }
+  ],
+  "obstacles": [
+    {
+      "name": "obstacle_1",
+      "pose": {
+        "x": 77.95352489342696,
+        "y": 25.83282113606971,
+        "z": 0.35,
+        "yaw_deg": 10.159628877735345,
+        "s": 80.00000000000001,
+        "lane": 1
+      },
+      "length": 4.5,
+      "width": 1.8,
+      "height": 1.6
+    },
+    {
+      "name": "obstacle_2_p0",
+      "pose": {
+        "x": 94.782382181388,
+        "y": 17.44106115374691,
+        "z": 0.35,
+        "yaw_deg": -16.704204621218135,
+        "s": 100.00000000000001,
+        "lane": 1
+      },
+      "length": 4.5,
+      "width": 1.8,
+      "height": 1.6
+    },
+    {
+      "name": "obstacle_3_p0",
+      "pose": {
+        "x": 93.56080124574967,
+        "y": 13.37040518478012,
+        "z": 0.35,
+        "yaw_deg": -16.704204621218135,
+        "s": 100.00000000000001,
+        "lane": 2
+      },
+      "length": 4.5,
+      "width": 1.8,
+      "height": 1.6
+    }
+  ],
+  "traffic_lights": [
+    {
+      "name": "traffic_light_crosswalk",
+      "pose": {
+        "x": 107.15398416925086,
+        "y": 95.3745614577123,
+        "z": 8.0,
+        "yaw_deg": -173.8440608839525,
+        "s": 224.99999999999994,
+        "lane": null
+      },
+      "static_mesh_hint": "Signal_3Light_Post01"
+    }
+  ]
+}
