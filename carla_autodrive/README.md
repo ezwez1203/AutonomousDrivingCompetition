@@ -158,7 +158,8 @@ Useful knobs:
 
 ```bash
 conda run -n carla python -m carla_autodrive.scripts.phase5_mission_runner \
-  --mission time_trial --ticks 7000 --target-speed 2.0 --no-perception
+  --mission time_trial --ticks 7000 --target-speed 4.8 --curve-max-lat-acc 0.80 \
+  --curve-lookahead 4.0 --steer-speed-gain 1.6 --lane-corridor-scoring --no-perception
 
 conda run -n carla python -m carla_autodrive.scripts.phase5_mission_runner \
   --mission obstacle_signal --ticks 3000 --target-speed 2.0 \
@@ -168,13 +169,18 @@ conda run -n carla python -m carla_autodrive.scripts.phase5_mission_runner \
   --mission parking --ticks 2200 --target-speed 2.0 --parking-zone 2 --reverse-parking
 ```
 
+Time-trial lane scoring now uses the lane corridor by default rather than raw route CTE. The route itself is still the lane-2 virtual line between the center dashed line and the outside solid line, so the car can move within that right-hand lane without collecting false lane-intrusion penalties. The raw CTE is still reported because it remains useful for tuning.
+
+For obstacle/signal missions, lane penalties are suppressed while the FSM is in `OBSTACLE_AVOID`, since that section is allowed to use the adjacent lane for avoidance. Use `--no-lane-corridor-scoring` only when comparing against older reports that used the legacy raw-CTE proxy.
+
 ## Phase 6: Scoring, Reports, And Sweeps
 
-Phase 5 can write one JSON summary and one per-tick CSV. These reports include timing, speed, CTE, heading, FSM state, control reason, collision count, lane-intrusion proxy, lane-departure proxy, stop-violation proxy, and parking-hold ticks.
+Phase 5 can write one JSON summary and one per-tick CSV. These reports include timing, speed, CTE, heading, FSM state, control reason, collision count, lane-corridor intrusion/departure events, stop-violation proxy, and parking-hold ticks.
 
 ```bash
 conda run -n carla python -m carla_autodrive.scripts.phase5_mission_runner \
-  --mission time_trial --ticks 7000 --target-speed 2.0 --no-perception \
+  --mission time_trial --ticks 7000 --target-speed 4.8 --curve-max-lat-acc 0.80 \
+  --curve-lookahead 4.0 --steer-speed-gain 1.6 --lane-corridor-scoring --no-perception \
   --report-path carla_autodrive/reports/time_trial.json \
   --csv-path carla_autodrive/reports/time_trial.ticks.csv
 ```
@@ -184,17 +190,38 @@ Parameter sweep:
 ```bash
 conda run -n carla python -m carla_autodrive.scripts.phase6_test_runner \
   --mission time_trial \
-  --target-speeds 2.0,2.2,2.4 \
-  --curve-max-lat-accs 0.45,0.55 \
-  --curve-lookaheads 6.0,8.0 \
-  --steer-speed-gains 1.8,2.2 \
-  --no-auto-load-track-map
+  --ticks 7000 \
+  --target-speeds 4.8,5.0,5.2,5.4 \
+  --curve-max-lat-accs 0.80,0.85,0.90 \
+  --curve-lookaheads 3.0,3.5,4.0 \
+  --steer-speed-gains 1.4,1.6,1.8 \
+  --rank-objective time \
+  --lane-corridor-scoring \
+  --no-perception \
+  --no-auto-load-track-map \
+  --out-dir carla_autodrive/reports/phase6_time_trial_corridor_150_attack
 ```
 
 Outputs:
 
 - `summary.csv`: all run metrics in one table,
 - `best_run.json`: best run ranked by completion, penalty score, sim time, and mean CTE.
+
+Current time-trial baseline from `phase6_time_trial_corridor_sub170`, confirmed with repeated single-run checks:
+
+```text
+target_speed_mps: 4.8
+curve_max_lat_acc: 0.80
+curve_lookahead: 4.0
+steer_speed_gain: 1.6
+sim_time_s: 153.20
+lane_intrusion_ticks: 0
+lane_departure_ticks: 0
+collision_count: 0
+score: 0.11
+```
+
+This is the current time-trial race baseline. It has been reproduced in repeated single-run checks, but any faster setup still needs the same confirmation rule: prefer the fastest run with `collision_count=0`, `lane_departure_ticks=0`, and `lane_intrusion_ticks=0`.
 
 ## Config Files
 

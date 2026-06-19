@@ -64,6 +64,10 @@ class TrackSpec:
         return self.road_width / self.cfg["lanes"]["count"]
 
     @property
+    def lane_mark_width(self) -> float:
+        return self.mm(self.cfg["dimensions"].get("lane_mark_mm", 0.0))
+
+    @property
     def start_pose(self) -> tuple[float, float, float]:
         s = self.cfg["centerline"].get("start", {"x": 0, "y": 0, "heading_deg": 0})
         return self.mm(s["x"]), self.mm(s["y"]), math.radians(s["heading_deg"])

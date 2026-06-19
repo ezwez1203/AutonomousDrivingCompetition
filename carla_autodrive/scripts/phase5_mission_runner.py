@@ -104,6 +104,13 @@ def parse_args(default_duration: float, default_dt: float) -> argparse.Namespace
     parser.add_argument("--cte-warning", type=float, default=0.75)
     parser.add_argument("--lane-intrusion-cte", type=float, default=0.45)
     parser.add_argument("--lane-departure-cte", type=float, default=0.85)
+    parser.set_defaults(lane_corridor_scoring=True)
+    parser.add_argument("--lane-corridor-scoring", dest="lane_corridor_scoring", action="store_true",
+                        help="Score lane events against the current lane corridor instead of raw route CTE")
+    parser.add_argument("--no-lane-corridor-scoring", dest="lane_corridor_scoring", action="store_false",
+                        help="Use the legacy raw route-CTE thresholds for lane events")
+    parser.add_argument("--lane-boundary-margin", type=float, default=0.0,
+                        help="Extra safety margin, in meters, subtracted from the lane-corridor threshold")
     parser.add_argument("--stop-violation-speed", type=float, default=0.35)
     parser.add_argument("--report-path", default=None, help="Write detailed run report JSON")
     parser.add_argument("--csv-path", default=None, help="Write per-tick telemetry CSV")
@@ -163,6 +170,29 @@ def build_route(spec: TrackSpec, args: argparse.Namespace):
         )
         label = f"reverse parking route {zone.label}"
     return route, False, True, label
+
+
+def lane_event_flags(spec: TrackSpec, args: argparse.Namespace, decision, abs_cte: float) -> tuple[bool, bool]:
+    """Return lane intrusion/departure flags for the current tick.
+
+    For lane-following runs, the route is the virtual line inside the selected
+    lane. Raw route CTE is still useful for tuning, but lane penalties should
+    only start once the vehicle leaves the lane corridor. During the obstacle
+    mission's avoidance state, lane penalties are intentionally suppressed
+    because the rules allow using the adjacent lane in that section.
+    """
+    if MissionMode(args.mission) == MissionMode.OBSTACLE_SIGNAL and decision.state.value == "OBSTACLE_AVOID":
+        return False, False
+
+    if not args.lane_corridor_scoring:
+        return abs_cte >= args.lane_intrusion_cte, abs_cte >= args.lane_departure_cte
+
+    half_lane = spec.lane_width / 2.0
+    marking = spec.lane_mark_width
+    margin = max(0.0, float(args.lane_boundary_margin))
+    intrusion_threshold = max(0.0, half_lane - marking - margin)
+    departure_threshold = max(intrusion_threshold, half_lane - margin)
+    return abs_cte >= intrusion_threshold, abs_cte >= departure_threshold
 
 
 def build_route_follower(route, closed_route: bool, stop_at_end: bool, args: argparse.Namespace):
@@ -357,6 +387,7 @@ def main() -> int:
                 collision = collision_monitor.snapshot() if collision_monitor is not None else None
                 stop_required = bool(decision.force_stop or decision.state.value == "TRAFFIC_STOP")
                 stop_violation = bool(stop_required and command.current_speed_mps > args.stop_violation_speed)
+                lane_intrusion, lane_departure = lane_event_flags(spec, args, decision, abs_cte)
                 scorer.add_tick(
                     TickRecord(
                         tick=tick_count,
@@ -375,8 +406,8 @@ def main() -> int:
                         heading_error_rad=command.heading_error_rad,
                         collision_count=collision.count if collision is not None else 0,
                         collision_impulse=collision.max_impulse if collision is not None else 0.0,
-                        lane_intrusion=abs_cte >= args.lane_intrusion_cte,
-                        lane_departure=abs_cte >= args.lane_departure_cte,
+                        lane_intrusion=lane_intrusion,
+                        lane_departure=lane_departure,
                         stop_required=stop_required,
                         stop_violation=stop_violation,
                         parking_hold=decision.reason == "parking_hold",
@@ -422,6 +453,10 @@ def main() -> int:
                     "cte_warning_m": args.cte_warning,
                     "lane_intrusion_cte_m": args.lane_intrusion_cte,
                     "lane_departure_cte_m": args.lane_departure_cte,
+                    "lane_corridor_scoring": args.lane_corridor_scoring,
+                    "route_lane_width_m": spec.lane_width,
+                    "route_lane_mark_width_m": spec.lane_mark_width,
+                    "lane_boundary_margin_m": args.lane_boundary_margin,
                     "stop_violation_speed_mps": args.stop_violation_speed,
                 })
                 log.info("Phase 6 JSON report written: %s", args.report_path)

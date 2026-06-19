@@ -44,6 +44,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--cte-warning", type=float, default=0.75)
     parser.add_argument("--lane-intrusion-cte", type=float, default=0.45)
     parser.add_argument("--lane-departure-cte", type=float, default=0.85)
+    parser.set_defaults(lane_corridor_scoring=True)
+    parser.add_argument("--lane-corridor-scoring", dest="lane_corridor_scoring", action="store_true",
+                        help="Score lane events against the lane corridor. This is the default.")
+    parser.add_argument("--no-lane-corridor-scoring", dest="lane_corridor_scoring", action="store_false",
+                        help="Use legacy raw route-CTE thresholds for lane events.")
+    parser.add_argument("--lane-boundary-margin", type=float, default=0.0)
+    parser.add_argument("--rank-objective", choices=("score", "time"), default="score",
+                        help="Rank by score first, or by fastest safe completion first.")
     parser.add_argument("--stop-violation-speed", type=float, default=0.35)
     parser.add_argument("--no-auto-load-track-map", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
@@ -85,10 +93,15 @@ def main() -> int:
             "--cte-warning", str(args.cte_warning),
             "--lane-intrusion-cte", str(args.lane_intrusion_cte),
             "--lane-departure-cte", str(args.lane_departure_cte),
+            "--lane-boundary-margin", str(args.lane_boundary_margin),
             "--stop-violation-speed", str(args.stop_violation_speed),
             "--report-path", str(report_path),
             "--csv-path", str(csv_path),
         ]
+        if args.lane_corridor_scoring:
+            cmd.append("--lane-corridor-scoring")
+        else:
+            cmd.append("--no-lane-corridor-scoring")
         if args.no_perception:
             cmd.append("--no-perception")
         if args.no_collision_sensor:
@@ -122,7 +135,7 @@ def main() -> int:
 
     summary_path = out_dir / "summary.csv"
     if rows:
-        _annotate_rank(rows)
+        _annotate_rank(rows, objective=args.rank_objective)
         fieldnames = sorted({key for row in rows for key in row.keys()})
         with summary_path.open("w", newline="", encoding="utf-8") as fh:
             writer = csv.DictWriter(fh, fieldnames=fieldnames)
@@ -178,21 +191,38 @@ def _summary_row(idx: int, report_path: Path, target_speed: float, curve_acc: fl
     }
 
 
-def _annotate_rank(rows: list[dict[str, object]]) -> None:
+def _annotate_rank(rows: list[dict[str, object]], *, objective: str = "score") -> None:
     ok_rows = [row for row in rows if row.get("status") == "ok"]
-    ranked = sorted(ok_rows, key=_rank_key)
+    ranked = sorted(ok_rows, key=lambda row: _rank_key(row, objective=objective))
     for rank, row in enumerate(ranked, start=1):
         row["rank"] = rank
-        row["rank_key"] = "|".join(str(item) for item in _rank_key(row))
+        row["rank_objective"] = objective
+        row["rank_key"] = "|".join(str(item) for item in _rank_key(row, objective=objective))
 
 
-def _rank_key(row: dict[str, object]) -> tuple[object, ...]:
+def _rank_key(row: dict[str, object], *, objective: str = "score") -> tuple[object, ...]:
     completed = bool(row.get("completed"))
+    collision_count = float(row.get("collision_count") or 0.0)
+    lane_departure_ticks = float(row.get("lane_departure_ticks") or 0.0)
+    stop_violation_ticks = float(row.get("stop_violation_ticks") or 0.0)
+    score = float(row.get("score") or 0.0)
+    sim_time_s = float(row.get("sim_time_s") or 1e9)
+    mean_abs_cte = float(row.get("mean_abs_cte_m") or 1e9)
+    if objective == "time":
+        return (
+            not completed,
+            collision_count > 0.0,
+            lane_departure_ticks > 0.0,
+            stop_violation_ticks > 0.0,
+            sim_time_s,
+            score,
+            mean_abs_cte,
+        )
     return (
         not completed,
-        float(row.get("score") or 0.0),
-        float(row.get("sim_time_s") or 1e9),
-        float(row.get("mean_abs_cte_m") or 1e9),
+        score,
+        sim_time_s,
+        mean_abs_cte,
     )
 
 
