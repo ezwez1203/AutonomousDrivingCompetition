@@ -61,14 +61,14 @@ Example log shape:
 
 ## Phase 1: Custom Track
 
-The competition track is generated as OpenDRIVE from `config/track.yaml`.
+The competition track geometry is generated as OpenDRIVE from `config/track.yaml`. CARLA native road marks are disabled; visible lane lines and the crosswalk are spawned with `scripts/runtime_mesh_markings.py`.
 
 ```bash
 python -m carla_autodrive.scripts.build_track
 python -m carla_autodrive.scripts.build_track --load --timeout 120
 
 python -m carla_autodrive.scripts.phase0_spawn_sensors --duration 8 --throttle 0.05
-python -m carla_autodrive.scripts.phase1_draw_elements --duration 60
+python -m carla_autodrive.scripts.runtime_mesh_markings --max-actors 3600
 python -m carla_autodrive.scripts.phase1_draw_elements --duration 30 --spawn-obstacles --obstacle2 0 --obstacle3 0
 python -m carla_autodrive.scripts.phase1_place_actors --duration 60
 python -m carla_autodrive.scripts.phase1_place_actors --duration 2 --tick 0.5 --spawn-test-vehicle-zone start_line
@@ -82,13 +82,14 @@ Track utilities:
 python -m carla_autodrive.scripts.measure_track_accuracy --mask nonwhite --component largest
 python -m carla_autodrive.scripts.fit_track_from_blueprint --iterations 120 --samples 360 --control-points 24 --learning-rate 0.18 --smooth 0.35 --coverage-weight 0.05 --max-step-px 8
 python -m carla_autodrive.scripts.fit_track_from_blueprint --iterations 120 --samples 360 --control-points 24 --learning-rate 0.18 --smooth 0.35 --coverage-weight 0.05 --max-step-px 8 --apply
-python -m carla_autodrive.scripts.export_unreal_bake
 ```
 
 Current track assumptions:
 
 - Track dimensions live in `config/track.yaml`.
 - There are two lanes: lane 1 is inner, lane 2 is outer.
+- The visible marking source is `scripts/runtime_mesh_markings.py`: solid edge lines are approximated from the road edges, the dashed center line is the midpoint between both edges, and smoothing is applied before spawning mesh actors.
+- `phase1_draw_elements.py` only draws mission labels/boxes and can spawn obstacles; it no longer paints lane or crosswalk markings.
 - CARLA uses a scaled version of the real millimeter layout, currently around 10x, which makes physics less fragile.
 - The fitted track is image-derived, so it is good enough for control work but should still be treated as an approximation until CAD/DXF data is available.
 
@@ -204,8 +205,10 @@ conda run -n carla python -m carla_autodrive.scripts.phase6_test_runner \
 
 Outputs:
 
-- `summary.csv`: all run metrics in one table,
+- `summary.csv`: all run metrics in one table while a sweep is being evaluated,
 - `best_run.json`: best run ranked by completion, penalty score, sim time, and mean CTE.
+
+Generated run logs are intentionally pruned after review. Keep `best_run.json` files and `time_trial_best_video.*`; remove bulk `run*.json`, `run*.ticks.csv`, and `summary.csv` logs when they are no longer needed.
 
 Current time-trial baseline from `phase6_time_trial_corridor_sub170`, confirmed with repeated single-run checks:
 

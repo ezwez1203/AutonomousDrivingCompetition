@@ -6,6 +6,7 @@ import argparse
 import csv
 import itertools
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -54,6 +55,14 @@ def parse_args() -> argparse.Namespace:
                         help="Rank by score first, or by fastest safe completion first.")
     parser.add_argument("--stop-violation-speed", type=float, default=0.35)
     parser.add_argument("--no-auto-load-track-map", action="store_true")
+    parser.add_argument("--record-best-video", action="store_true",
+                        help="Record front/rear videos during each run but retain only the current best run videos")
+    parser.add_argument("--best-video-dir", default=None,
+                        help="Directory for retained best-run videos. Defaults to <out-dir>/best_run_video")
+    parser.add_argument("--record-video-every", type=int, default=1,
+                        help="Record one video frame every N simulator ticks when --record-best-video is enabled")
+    parser.add_argument("--record-video-fps", type=float, default=20.0,
+                        help="FPS metadata for best-run video output")
     parser.add_argument("--dry-run", action="store_true")
     return parser.parse_args()
 
@@ -70,6 +79,10 @@ def main() -> int:
         parse_float_list(args.curve_lookaheads),
         parse_float_list(args.steer_speed_gains),
     ))
+    video_root = Path(args.best_video_dir) if args.best_video_dir else out_dir / "best_run_video"
+    video_candidates_dir = out_dir / ".video_candidates"
+    best_video_dir: Path | None = None
+    best_video_row: dict[str, object] | None = None
     log.info("Phase 6 test runner: mission=%s runs=%d out=%s", args.mission, len(grid), out_dir)
 
     for idx, (target_speed, curve_acc, curve_lookahead, steer_gain) in enumerate(grid, start=1):
@@ -79,6 +92,7 @@ def main() -> int:
         ).replace(".", "p")
         report_path = out_dir / f"{stem}.json"
         csv_path = out_dir / f"{stem}.ticks.csv"
+        candidate_video_dir = video_candidates_dir / stem
         cmd = [
             sys.executable,
             "-m",
@@ -98,6 +112,13 @@ def main() -> int:
             "--report-path", str(report_path),
             "--csv-path", str(csv_path),
         ]
+        if args.record_best_video:
+            cmd += [
+                "--monitor-cameras",
+                "--record-monitor-video-dir", str(candidate_video_dir),
+                "--record-monitor-video-every", str(args.record_video_every),
+                "--record-monitor-video-fps", str(args.record_video_fps),
+            ]
         if args.lane_corridor_scoring:
             cmd.append("--lane-corridor-scoring")
         else:
@@ -120,6 +141,8 @@ def main() -> int:
             continue
         result = subprocess.run(cmd, cwd=Path.cwd(), check=False)
         if result.returncode != 0:
+            if args.record_best_video:
+                _delete_tree(candidate_video_dir)
             rows.append({
                 "run": idx,
                 "status": "failed_process",
@@ -131,7 +154,26 @@ def main() -> int:
                 "steer_speed_gain": steer_gain,
             })
             continue
-        rows.append(_summary_row(idx, report_path, target_speed, curve_acc, curve_lookahead, steer_gain))
+        row = _summary_row(idx, report_path, target_speed, curve_acc, curve_lookahead, steer_gain)
+        if args.record_best_video:
+            if _is_better(row, best_video_row, objective=args.rank_objective):
+                if best_video_dir is not None:
+                    _delete_tree(best_video_dir)
+                video_root.parent.mkdir(parents=True, exist_ok=True)
+                _delete_tree(video_root)
+                if candidate_video_dir.exists():
+                    shutil.move(str(candidate_video_dir), str(video_root))
+                    row["video_dir"] = str(video_root)
+                best_video_dir = video_root
+                if best_video_row is not None:
+                    best_video_row.pop("video_dir", None)
+                    best_video_row["video_dir_deleted"] = True
+                best_video_row = row
+                log.info("new best video retained: run=%d dir=%s", idx, video_root)
+            else:
+                _delete_tree(candidate_video_dir)
+                row["video_dir_deleted"] = True
+        rows.append(row)
 
     summary_path = out_dir / "summary.csv"
     if rows:
@@ -147,9 +189,25 @@ def main() -> int:
             best_path = out_dir / "best_run.json"
             best_path.write_text(json.dumps(best_rows[0], ensure_ascii=False, indent=2), encoding="utf-8")
             log.info("Phase 6 best run written: %s", best_path)
+            if args.record_best_video:
+                log.info("Phase 6 retained best-run video dir: %s", best_rows[0].get("video_dir", video_root))
     elif args.dry_run:
         log.info("dry-run complete; no summary written")
     return 0
+
+
+
+def _delete_tree(path: Path) -> None:
+    if path.exists():
+        shutil.rmtree(path)
+
+
+def _is_better(row: dict[str, object], best_row: dict[str, object] | None, *, objective: str) -> bool:
+    if row.get("status") != "ok":
+        return False
+    if best_row is None:
+        return True
+    return _rank_key(row, objective=objective) < _rank_key(best_row, objective=objective)
 
 
 def _summary_row(idx: int, report_path: Path, target_speed: float, curve_acc: float, curve_lookahead: float, steer_gain: float) -> dict[str, object]:

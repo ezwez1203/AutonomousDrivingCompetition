@@ -10,6 +10,13 @@ from .camera import RGBCamera
 from .frames import PerceptionInput
 from .lidar import Lidar
 from .radar import Radar
+from .ultrasonic import FrontUltrasonic, UltrasonicReading
+
+
+_DEFAULT_CAMERA_VARIANTS = (
+    ("front", [0.5, 0.0, 0.5], [0.0, -15.0, 0.0]),
+    ("rear", [-0.45, 0.0, 0.45], [0.0, -10.0, 180.0]),
+)
 
 
 _DEFAULT_RADAR_VARIANTS = (
@@ -18,6 +25,35 @@ _DEFAULT_RADAR_VARIANTS = (
     ("right", [0.0, 0.3, 0.2], [0.0, 0.0, 90.0]),
     ("left", [0.0, -0.3, 0.2], [0.0, 0.0, -90.0]),
 )
+
+
+def expand_camera_configs(camera_cfg: dict) -> list[tuple[str, dict]]:
+    """Build named RGB camera configs from position_variants."""
+    base = {k: v for k, v in camera_cfg.items() if k != "position_variants"}
+    variants = camera_cfg.get("position_variants") or [
+        {"name": name, "position": pos, "rotation": rot}
+        for name, pos, rot in _DEFAULT_CAMERA_VARIANTS
+    ]
+
+    configs: list[tuple[str, dict]] = []
+    for index, variant in enumerate(variants):
+        default_name, default_pos, default_rot = _DEFAULT_CAMERA_VARIANTS[
+            index % len(_DEFAULT_CAMERA_VARIANTS)
+        ]
+        cfg = dict(base)
+        if isinstance(variant, dict):
+            name = str(variant.get("name") or default_name)
+            cfg["position"] = variant.get("position", cfg.get("position", default_pos))
+            cfg["rotation"] = variant.get("rotation", cfg.get("rotation", default_rot))
+        else:
+            name = default_name
+            cfg["position"] = variant
+            cfg["rotation"] = default_rot
+        cfg.setdefault("type", "sensor.camera.rgb")
+        cfg.setdefault("position", default_pos)
+        cfg.setdefault("rotation", default_rot)
+        configs.append((f"camera_{name}", cfg))
+    return configs
 
 
 def expand_radar_configs(radar_cfg: dict) -> list[tuple[str, dict]]:
@@ -47,6 +83,28 @@ def expand_radar_configs(radar_cfg: dict) -> list[tuple[str, dict]]:
         cfg.setdefault("rotation", default_rot)
         configs.append((f"radar_{name}", cfg))
     return configs
+
+
+@dataclass(slots=True)
+class MultiCamera:
+    """Spawn and read multiple RGB monitoring cameras."""
+
+    camera_cfg: dict
+    cameras: list[RGBCamera] = field(init=False)
+
+    def __post_init__(self) -> None:
+        self.cameras = [
+            RGBCamera(cfg, name=name) for name, cfg in expand_camera_configs(self.camera_cfg)
+        ]
+
+    def spawn(self, world, parent) -> list:
+        return [camera.spawn(world, parent) for camera in self.cameras]
+
+    def summaries(self) -> list[str]:
+        return [camera.summary() for camera in self.cameras]
+
+    def latest_images(self) -> dict[str, tuple[int, np.ndarray | None]]:
+        return {camera.name: camera.get_latest() for camera in self.cameras}
 
 
 @dataclass(slots=True)
@@ -108,10 +166,16 @@ class SensorStack:
         enable_camera: bool = True,
         enable_lidar: bool = True,
         enable_radar: bool = True,
+        enable_monitor_cameras: bool = False,
+        enable_ultrasonic: bool = False,
     ):
         self.camera = RGBCamera(sensor_cfg["camera"]) if enable_camera else None
         self.lidar = Lidar(sensor_cfg["lidar"]) if enable_lidar else None
         self.radar = MultiRadar(sensor_cfg["radar"]) if enable_radar else None
+        monitor_cfg = sensor_cfg.get("monitor_cameras", sensor_cfg["camera"])
+        self.monitor_cameras = MultiCamera(monitor_cfg) if enable_monitor_cameras else None
+        ultrasonic_cfg = sensor_cfg.get("ultrasonic_front")
+        self.ultrasonic = FrontUltrasonic(ultrasonic_cfg) if enable_ultrasonic and ultrasonic_cfg else None
 
     def spawn(self, world, parent) -> list:
         actors = []
@@ -121,6 +185,10 @@ class SensorStack:
             actors.append(self.lidar.spawn(world, parent))
         if self.radar is not None:
             actors.extend(self.radar.spawn(world, parent))
+        if self.monitor_cameras is not None:
+            actors.extend(self.monitor_cameras.spawn(world, parent))
+        if self.ultrasonic is not None:
+            actors.append(self.ultrasonic.spawn(world, parent))
         return actors
 
     def summaries(self) -> list[str]:
@@ -131,7 +199,21 @@ class SensorStack:
             rows.append(self.lidar.summary())
         if self.radar is not None:
             rows.extend(self.radar.summaries())
+        if self.monitor_cameras is not None:
+            rows.extend(self.monitor_cameras.summaries())
+        if self.ultrasonic is not None:
+            rows.append(self.ultrasonic.summary())
         return rows
+
+    def monitor_camera_frames(self) -> dict[str, tuple[int, np.ndarray | None]]:
+        if self.monitor_cameras is None:
+            return {}
+        return self.monitor_cameras.latest_images()
+
+    def ultrasonic_reading(self) -> UltrasonicReading | None:
+        if self.ultrasonic is None:
+            return None
+        return self.ultrasonic.latest_reading()
 
     def capture(self, vehicle, sim_frame: int, timestamp: float) -> PerceptionInput:
         sensor_frames: dict[str, int] = {}

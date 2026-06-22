@@ -30,6 +30,37 @@ lidar:
   position: [0.0, 0.0, 0.45]
   rotation: [0.0, 0.0, 0.0]
 
+
+# Two extra RGB cameras used for operator monitoring and signal-compliance recording.
+monitor_cameras:
+  type: "sensor.camera.rgb"
+  image_size_x: 640
+  image_size_y: 360
+  fov: 100
+  sensor_tick: 0.0
+  position_variants:
+    - name: "front"
+      # Tesla Model3 기준 앞 범퍼 바깥쪽. 차체 내부/후드 클리핑 방지.
+      position: [2.70, 0.0, 1.25]
+      rotation: [0.0, -8.0, 0.0]
+    - name: "rear"
+      # 뒤 범퍼 바깥쪽에서 후방을 보도록 배치.
+      position: [-2.70, 0.0, 1.25]
+      rotation: [0.0, -8.0, 180.0]
+
+# CARLA has no native ultrasonic blueprint.  This uses a short-range obstacle detector
+# as a front ultrasonic approximation for stop-zone and close-object monitoring.
+ultrasonic_front:
+  type: "sensor.other.obstacle"
+  model: "front_ultrasonic_approximation"
+  distance: 2.0
+  hit_radius: 0.18
+  only_dynamics: false
+  debug_linetrace: false
+  sensor_tick: 0.0
+  position: [0.55, 0.0, 0.22]
+  rotation: [0.0, 0.0, 0.0]
+
 # Radar substitutes for 12 ultrasonic sensors from the real-vehicle parts list, laid out around the perimeter.
 radar:
   type: "sensor.other.radar"

@@ -68,12 +68,12 @@ class CarlaSession:
     def is_sync(self) -> bool:
         return bool(self.cfg["world"].get("synchronous_mode"))
 
-    def tick(self) -> None:
-        """Tick the world in sync mode; otherwise wait for the next server tick."""
+    def tick(self):
+        """Tick the world and return the snapshot used as the timing source."""
         if self.is_sync:
             self.world.tick()
-        else:
-            self.world.wait_for_tick()
+            return self.world.get_snapshot()
+        return self.world.wait_for_tick()
 
     def register(self, actor: carla.Actor) -> carla.Actor:
         """Register an actor for cleanup when the session exits."""

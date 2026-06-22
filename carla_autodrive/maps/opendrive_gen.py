@@ -1,6 +1,6 @@
 """Generate an OpenDRIVE (.xodr) string from TrackSpec.
 
-Build one closed-loop road from the reference line, then extend two lanes to the right. Lanes -1 and -2 both drive in the +s direction. Road marks are inner solid, divider dashed, and outer solid.
+Build one closed-loop road from the reference line, then extend two lanes to the right. Lanes -1 and -2 both drive in the +s direction. CARLA road marks are disabled because visible markings are spawned as runtime mesh actors.
 """
 from __future__ import annotations
 
@@ -41,10 +41,10 @@ def _width(w: float) -> str:
 
 
 def _roadmark(spec: TrackSpec, mark_type: str) -> str:
+    del mark_type
     width = spec.mm(spec.cfg["dimensions"].get("lane_mark_mm", 50))
-    return (f'<roadMark sOffset="0.0" type="{mark_type}" material="standard" '
+    return (f'<roadMark sOffset="0.0" type="none" material="standard" '
             f'color="white" width="{_f(width)}" laneChange="both"/>')
-
 
 def _signals(spec: TrackSpec) -> str:
     elements = spec.cfg.get("elements", {})
@@ -53,14 +53,49 @@ def _signals(spec: TrackSpec) -> str:
         return ""
     s_m = spec.mm(float(crosswalk["s"])) % spec.total_length()
     # Reference line is the inner road edge; lanes expand to the right side (negative t).
-    t = -(spec.road_width + 2.0)
+    # Place the signal just outside the outer edge and keep the pole on the road surface.
+    t = -(spec.road_width + 0.6)
     return f"""
         <signals>
             <signal name="Signal_3Light_Post01" id="1001" s="{_f(s_m)}" t="{_f(t)}"
-                    zOffset="8.0" hOffset="0.0" roll="0.0" pitch="0.0" orientation="-"
+                    zOffset="0.0" hOffset="0.0" roll="0.0" pitch="0.0" orientation="-"
                     dynamic="yes" country="OpenDRIVE" type="1000001" subtype="-1"
                     value="-1.0" text="" height="1.16" width="0.53"/>
         </signals>"""
+
+
+def _crosswalk_objects(spec: TrackSpec) -> str:
+    elements = spec.cfg.get("elements", {})
+    crosswalk = elements.get("crosswalk")
+    if not crosswalk:
+        return ""
+
+    dims = spec.cfg["dimensions"]
+    s_center = spec.mm(float(crosswalk["s"])) % spec.total_length()
+    crosswalk_length = spec.mm(dims.get("crosswalk_mm", [1000, 100])[1])
+    stripe_count = int(spec.cfg.get("lanes", {}).get("crosswalk_stripes", 4))
+    stripe_count = max(1, stripe_count)
+    stripe_length = min(0.18, crosswalk_length / (stripe_count * 1.5))
+    if stripe_count == 1:
+        gap = 0.0
+    else:
+        gap = max(0.05, (crosswalk_length - stripe_count * stripe_length) / (stripe_count - 1))
+    width = spec.road_width + 0.6
+    t_center = -spec.road_width / 2.0
+    start_s = s_center - crosswalk_length / 2.0
+
+    rows = ["        <objects>"]
+    for idx in range(stripe_count):
+        s_m = (start_s + idx * (stripe_length + gap) + stripe_length / 2.0) % spec.total_length()
+        rows.append(
+            f'            <object id="{2000 + idx}" name="crosswalk_stripe_{idx + 1}" '
+            f's="{_f(s_m)}" t="{_f(t_center)}" zOffset="0.03" '
+            f'validLength="0.0" orientation="none" type="crosswalk" subtype="zebra" '
+            f'dynamic="no" hdg="0.0" pitch="0.0" roll="0.0" '
+            f'height="0.02" width="{_f(width)}" length="{_f(stripe_length)}"/>'
+        )
+    rows.append("        </objects>")
+    return "\n".join(rows)
 
 
 def generate_xodr(spec: TrackSpec) -> str:
@@ -112,6 +147,7 @@ def generate_xodr(spec: TrackSpec) -> str:
 {right_lanes}
             </laneSection>
         </lanes>
+{_crosswalk_objects(spec)}
 {_signals(spec)}
     </road>"""
 

@@ -31,7 +31,8 @@ from carla_autodrive.missions import (
 )
 from carla_autodrive.perception import PerceptionPipeline
 from carla_autodrive.scripts.phase4_control_demo import auto_load_track_map, spawn_preset_obstacles
-from carla_autodrive.sensors import SensorStack
+from carla_autodrive.scripts.runtime_mesh_markings import RuntimeMarkingConfig, spawn_runtime_markings
+from carla_autodrive.sensors import CameraMonitor, RunVideoRecorder, SensorStack, SignalComplianceRecorder
 from carla_autodrive.simulator import CollisionMonitor, CompetitionScorer, TickRecord
 from carla_autodrive.state_machine import MissionContext, MissionFSM, MissionFSMConfig, MissionMode
 from carla_autodrive.utils import CarlaSession, get_logger, load_config
@@ -47,13 +48,17 @@ def parse_args(default_duration: float, default_dt: float) -> argparse.Namespace
     parser.add_argument("--spawn-index", type=int, default=None, help="Vehicle spawn point index")
     parser.add_argument("--mission", choices=[mode.value for mode in MissionMode], default=MissionMode.TIME_TRIAL.value)
     parser.add_argument("--duration", type=float, default=default_duration)
-    parser.add_argument("--ticks", type=int, default=None, help="Run for N simulator ticks instead of wall-clock duration")
+    parser.add_argument("--duration-clock", choices=("sim", "real"), default="sim",
+                        help="Clock used by --duration. The default is simulator time from CARLA snapshots.")
+    parser.add_argument("--ticks", type=int, default=None, help="Run for N simulator ticks instead of duration")
     parser.add_argument("--target-speed", type=float, default=2.0, help="Base target speed in m/s")
     parser.add_argument("--route-lane", type=int, default=2)
     parser.add_argument("--route-spacing-mm", type=float, default=100.0)
     parser.add_argument("--total-laps", type=int, default=2)
     parser.add_argument("--no-auto-load-track-map", action="store_true")
     parser.add_argument("--track-map-load-timeout", type=float, default=180.0)
+    parser.add_argument("--runtime-marking-max-actors", type=int, default=3600,
+                        help="Maximum runtime static mesh actors for edge/midpoint lane markings.")
 
     parser.add_argument("--obstacle2", type=int, default=0, choices=(0, 1, 2), help="Obstacle 2 preset index")
     parser.add_argument("--obstacle3", type=int, default=0, choices=(0, 1, 2), help="Obstacle 3 preset index")
@@ -99,6 +104,30 @@ def parse_args(default_duration: float, default_dt: float) -> argparse.Namespace
     parser.add_argument("--no-lidar", action="store_true")
     parser.add_argument("--no-radar", action="store_true")
     parser.add_argument("--no-perception", action="store_true")
+    parser.add_argument(
+        "--spectator-camera",
+        choices=("none", "hood", "chase"),
+        default="none",
+        help="Keep the CARLA viewport camera fixed to the vehicle for recording",
+    )
+    parser.add_argument("--monitor-cameras", action="store_true",
+                        help="Attach front/rear RGB cameras for operator monitoring")
+    parser.add_argument("--monitor-display", action="store_true",
+                        help="Show monitoring camera windows with OpenCV when a GUI is available")
+    parser.add_argument("--no-ultrasonic", action="store_true",
+                        help="Do not attach the front ultrasonic obstacle detector")
+    parser.add_argument("--signal-record-dir", default=None,
+                        help="Record traffic-light stop compliance frames and metadata into this directory")
+    parser.add_argument("--signal-record-every", type=int, default=5,
+                        help="Record every N ticks while a traffic-light stop is required")
+    parser.add_argument("--signal-log", action="store_true",
+                        help="Print each saved traffic-light compliance record to stdout")
+    parser.add_argument("--record-monitor-video-dir", default=None,
+                        help="Record full-run front/rear monitoring videos into this directory")
+    parser.add_argument("--record-monitor-video-every", type=int, default=1,
+                        help="Write one monitoring video frame every N simulator ticks")
+    parser.add_argument("--record-monitor-video-fps", type=float, default=20.0,
+                        help="FPS metadata for monitoring video output")
     parser.add_argument("--dt", type=float, default=default_dt)
     parser.add_argument("--no-collision-sensor", action="store_true")
     parser.add_argument("--cte-warning", type=float, default=0.75)
@@ -228,6 +257,29 @@ def vehicle_speed(vehicle) -> float:
     return float(math.sqrt(velocity.x**2 + velocity.y**2 + velocity.z**2))
 
 
+def update_spectator_camera(world: carla.World, vehicle: carla.Vehicle, mode: str) -> None:
+    if mode == "none":
+        return
+
+    vehicle_tf = vehicle.get_transform()
+    if mode == "hood":
+        offset = carla.Location(x=0.8, y=0.0, z=1.1)
+        pitch = -8.0
+    elif mode == "chase":
+        offset = carla.Location(x=-6.0, y=0.0, z=3.0)
+        pitch = -18.0
+    else:
+        raise ValueError(f"unknown spectator camera mode: {mode}")
+
+    camera_location = vehicle_tf.transform(offset)
+    camera_rotation = carla.Rotation(
+        pitch=pitch,
+        yaw=vehicle_tf.rotation.yaw,
+        roll=0.0,
+    )
+    world.get_spectator().set_transform(carla.Transform(camera_location, camera_rotation))
+
+
 def main() -> int:
     cfg = load_config("sim")
     args = parse_args(cfg["phase0"]["duration"], cfg["world"].get("fixed_delta_seconds", 0.05))
@@ -301,8 +353,17 @@ def main() -> int:
             world = session.world
             if "OpenDriveMap" not in world.get_map().name:
                 raise RuntimeError(f"Phase 5 track routing needs the custom OpenDRIVE map. Current map: {world.get_map().name}")
+            marking_actors = spawn_runtime_markings(
+                world,
+                spec,
+                RuntimeMarkingConfig(max_actors=args.runtime_marking_max_actors),
+                client=session.client,
+            )
+            for actor in marking_actors:
+                session.register(actor)
 
             vehicle = session.spawn_vehicle()
+            update_spectator_camera(world, vehicle, args.spectator_camera)
             if args.spawn_preset_obstacles:
                 spawn_preset_obstacles(session, spec, args)
 
@@ -312,15 +373,48 @@ def main() -> int:
                 session.register(collision_monitor.spawn(world, vehicle))
 
             stack = None
-            if not args.no_perception:
+            monitor_requested = bool(
+                args.monitor_cameras
+                or args.monitor_display
+                or args.signal_record_dir
+                or args.record_monitor_video_dir
+            )
+            needs_stack = bool((not args.no_perception) or monitor_requested or not args.no_ultrasonic)
+            if needs_stack:
                 stack = SensorStack(
                     sensor_cfg,
-                    enable_camera=not args.no_camera,
-                    enable_lidar=not args.no_lidar,
-                    enable_radar=not args.no_radar,
+                    enable_camera=(not args.no_camera and not args.no_perception),
+                    enable_lidar=(not args.no_lidar and not args.no_perception),
+                    enable_radar=(not args.no_radar and not args.no_perception),
+                    enable_monitor_cameras=monitor_requested,
+                    enable_ultrasonic=not args.no_ultrasonic,
                 )
                 for actor in stack.spawn(world, vehicle):
                     session.register(actor)
+
+            camera_monitor = CameraMonitor(display=args.monitor_display) if monitor_requested else None
+            if camera_monitor is not None and camera_monitor.disabled_reason:
+                log.warning(camera_monitor.disabled_reason)
+            signal_recorder = (
+                SignalComplianceRecorder(
+                    args.signal_record_dir,
+                    sample_every_ticks=args.signal_record_every,
+                    log_events=args.signal_log,
+                )
+                if args.signal_record_dir
+                else None
+            )
+            video_recorder = (
+                RunVideoRecorder(
+                    args.record_monitor_video_dir,
+                    sample_every_ticks=args.record_monitor_video_every,
+                    fps=args.record_monitor_video_fps,
+                )
+                if args.record_monitor_video_dir
+                else None
+            )
+            if video_recorder is not None and video_recorder.disabled_reason:
+                log.warning(video_recorder.disabled_reason)
 
             log.info(
                 "Phase 5 mission runner started: mission=%s route=%s points=%d target=%.2fm/s",
@@ -332,9 +426,14 @@ def main() -> int:
             if args.manual_green:
                 log.info("manual green enabled: press Enter after the vehicle stops at the red-light zone")
 
-            start = time.time()
+            start_wall = time.perf_counter()
+            last_wall = start_wall
+            sim_start_seconds: float | None = None
             tick_count = 0
             sim_elapsed = 0.0
+            sim_delta = float(args.dt)
+            real_elapsed = 0.0
+            real_delta = 0.0
             next_log = 0.0
             speeds: list[float] = []
             abs_ctes: list[float] = []
@@ -345,14 +444,25 @@ def main() -> int:
             while True:
                 if args.ticks is not None and tick_count >= args.ticks:
                     break
-                if args.ticks is None and time.time() - start >= args.duration:
-                    break
+                if args.ticks is None:
+                    elapsed_for_limit = real_elapsed if args.duration_clock == "real" else sim_elapsed
+                    if elapsed_for_limit >= args.duration:
+                        break
 
-                session.tick()
+                snapshot = session.tick()
+                now_wall = time.perf_counter()
                 tick_count += 1
-                elapsed = time.time() - start
-                sim_elapsed = tick_count * args.dt
-                frame = world.get_snapshot().frame
+                update_spectator_camera(world, vehicle, args.spectator_camera)
+                timestamp = snapshot.timestamp
+                if sim_start_seconds is None:
+                    sim_start_seconds = float(timestamp.elapsed_seconds) - float(timestamp.delta_seconds or args.dt)
+                previous_sim_elapsed = sim_elapsed
+                sim_elapsed = max(0.0, float(timestamp.elapsed_seconds) - sim_start_seconds)
+                sim_delta = float(timestamp.delta_seconds or max(0.0, sim_elapsed - previous_sim_elapsed) or args.dt)
+                real_elapsed = now_wall - start_wall
+                real_delta = now_wall - last_wall
+                last_wall = now_wall
+                frame = snapshot.frame
                 speed = vehicle_speed(vehicle)
                 route_finished = route_follower.is_finished(vehicle.get_location(), speed)
                 decision = fsm.update(
@@ -375,10 +485,10 @@ def main() -> int:
 
                 perception = None
                 if stack is not None and perception_pipeline is not None:
-                    snapshot = stack.capture(vehicle, sim_frame=frame, timestamp=elapsed)
+                    snapshot = stack.capture(vehicle, sim_frame=frame, timestamp=sim_elapsed)
                     perception = perception_pipeline.process(snapshot)
 
-                control, command = controller.run_route_step(vehicle, route_follower, perception, args.dt)
+                control, command = controller.run_route_step(vehicle, route_follower, perception, sim_delta)
                 vehicle.apply_control(control)
                 speeds.append(command.current_speed_mps)
                 abs_ctes.append(abs(command.cross_track_error_m))
@@ -392,6 +502,9 @@ def main() -> int:
                     TickRecord(
                         tick=tick_count,
                         sim_time_s=sim_elapsed,
+                        real_time_s=real_elapsed,
+                        sim_delta_s=sim_delta,
+                        real_delta_s=real_delta,
                         state=decision.state.value,
                         decision_reason=decision.reason,
                         control_reason=command.reason,
@@ -416,6 +529,29 @@ def main() -> int:
                     )
                 )
 
+                if stack is not None:
+                    monitor_frames = stack.monitor_camera_frames()
+                    if camera_monitor is not None:
+                        camera_monitor.step(monitor_frames)
+                    if signal_recorder is not None:
+                        signal_recorder.step(
+                            tick=tick_count,
+                            sim_time_s=sim_elapsed,
+                            state=decision.state.value,
+                            decision_reason=decision.reason,
+                            stop_required=stop_required,
+                            stop_violation=stop_violation,
+                            speed_mps=command.current_speed_mps,
+                            camera_frames=monitor_frames,
+                            ultrasonic=stack.ultrasonic_reading(),
+                        )
+                    if video_recorder is not None:
+                        video_recorder.step(
+                            tick=tick_count,
+                            sim_time_s=sim_elapsed,
+                            camera_frames=monitor_frames,
+                        )
+
                 current_location = vehicle.get_location()
                 step_distance = math.hypot(current_location.x - prev_location.x, current_location.y - prev_location.y)
                 if step_distance <= 5.0:
@@ -424,15 +560,21 @@ def main() -> int:
 
                 if sim_elapsed >= next_log:
                     perception_text = perception.summary() if perception is not None else "perception=off"
+                    sensor_text = ""
+                    if stack is not None and (monitor_requested or not args.no_ultrasonic):
+                        sensor_text = " | sensors=" + "; ".join(stack.summaries())
                     log.info(
-                        "sim_t=%4.1fs tick=%d | %s decision=%s speed=%.2f | %s | %s",
+                        "sim_t=%4.1fs real_t=%4.1fs tick=%d dt=%.3f | %s decision=%s speed=%.2f | %s | %s%s",
                         sim_elapsed,
+                        real_elapsed,
                         tick_count,
+                        sim_delta,
                         fsm.summary(),
                         decision.reason,
                         decision.target_speed_mps,
                         command.summary(),
                         perception_text,
+                        sensor_text,
                     )
                     next_log += cfg["phase0"]["log_interval"]
 
@@ -458,6 +600,19 @@ def main() -> int:
                     "route_lane_mark_width_m": spec.lane_mark_width,
                     "lane_boundary_margin_m": args.lane_boundary_margin,
                     "stop_violation_speed_mps": args.stop_violation_speed,
+                    "spectator_camera": args.spectator_camera,
+                    "monitor_cameras": monitor_requested,
+                    "monitor_display": args.monitor_display,
+                    "ultrasonic_front": not args.no_ultrasonic,
+                    "signal_record_dir": args.signal_record_dir,
+                    "record_monitor_video_dir": args.record_monitor_video_dir,
+                    "record_monitor_video_every": args.record_monitor_video_every,
+                    "record_monitor_video_fps": args.record_monitor_video_fps,
+                    "duration_clock": args.duration_clock,
+                    "runtime_markings": "edge_midpoint_static_mesh",
+                    "runtime_marking_max_actors": args.runtime_marking_max_actors,
+                    "final_real_time_s": real_elapsed,
+                    "final_sim_delta_s": sim_delta,
                 })
                 log.info("Phase 6 JSON report written: %s", args.report_path)
             if args.csv_path:
@@ -465,9 +620,10 @@ def main() -> int:
                 log.info("Phase 6 CSV telemetry written: %s", args.csv_path)
             if speeds:
                 log.info(
-                    "Phase 5 metrics: sim_t=%.1fs distance=%.1fm avg_speed=%.2fm/s max_speed=%.2fm/s "
+                    "Phase 5 metrics: sim_t=%.1fs real_t=%.1fs distance=%.1fm avg_speed=%.2fm/s max_speed=%.2fm/s "
                     "mean_abs_cte=%.2fm max_abs_cte=%.2fm max_abs_heading=%.2frad states=%s reasons=%s",
                     sim_elapsed,
+                    real_elapsed,
                     distance_m,
                     sum(speeds) / len(speeds),
                     max(speeds),
@@ -478,6 +634,18 @@ def main() -> int:
                     summary.reasons,
                 )
                 log.info("Phase 6 events=%s", summary.events)
+            if signal_recorder is not None:
+                manifest = signal_recorder.write_manifest()
+                log.info(
+                    "traffic-light compliance recording written: %s frames=%d",
+                    manifest,
+                    signal_recorder.saved_count,
+                )
+            if video_recorder is not None:
+                manifest = video_recorder.close()
+                log.info("front/rear monitoring videos written: %s", manifest)
+            if camera_monitor is not None:
+                camera_monitor.close()
             if summary.penalties:
                 log.info("Phase 6 scorer penalties=%s score=%.2f", summary.penalties, summary.score)
             else:

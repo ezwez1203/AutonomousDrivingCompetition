@@ -137,10 +137,15 @@ class TrackSpec:
             if not isinstance(item, dict):
                 raise ValueError(f"invalid polyline point format: index={idx}, item={item!r}")
             pts.append((self.mm(float(item["x"])), self.mm(float(item["y"]))))
+        if len(pts) >= 4:
+            first, last = pts[0], pts[-1]
+            duplicate_threshold_m = max(1e-3, self.mm(float(centerline.get("target_spacing_mm", 10.0))) * 0.5)
+            if math.hypot(last[0] - first[0], last[1] - first[1]) <= duplicate_threshold_m:
+                pts.pop()
         return pts
 
     def _polyline_geometries(self) -> list[Geometry]:
-        pts = self._polyline_points()
+        pts = self._smooth_closed_polyline(self._polyline_points())
         geoms: list[Geometry] = []
         s = 0.0
         for idx, (x1, y1) in enumerate(pts):
@@ -152,6 +157,42 @@ class TrackSpec:
             geoms.append(Geometry(s, x1, y1, hdg, length, 0.0))
             s += length
         return geoms
+
+    def _smooth_closed_polyline(self, pts: list[tuple[float, float]]) -> list[tuple[float, float]]:
+        centerline = self.cfg["centerline"]
+        if not centerline.get("smooth", True) or len(pts) < 5:
+            return pts
+        spacing = self.mm(float(centerline.get("target_spacing_mm", 10.0)))
+        window_m = float(centerline.get("smooth_window_m", 0.45))
+        passes = int(centerline.get("smooth_passes", 1))
+        max_displacement = float(centerline.get("smooth_max_displacement_m", 0.25))
+        radius = max(1, int(round(window_m / max(spacing, 1e-6) / 2.0)))
+        radius = min(radius, max(1, len(pts) // 8))
+        weights = [radius + 1 - abs(i) for i in range(-radius, radius + 1)]
+        weight_sum = float(sum(weights))
+        smoothed = pts[:]
+        n = len(smoothed)
+        original = pts[:]
+        for _ in range(max(0, passes)):
+            nxt: list[tuple[float, float]] = []
+            for idx in range(n):
+                sx = 0.0
+                sy = 0.0
+                for rel, weight in zip(range(-radius, radius + 1), weights):
+                    x, y = smoothed[(idx + rel) % n]
+                    sx += x * weight
+                    sy += y * weight
+                ox, oy = original[idx]
+                nx = sx / weight_sum
+                ny = sy / weight_sum
+                disp = math.hypot(nx - ox, ny - oy)
+                if max_displacement > 0.0 and disp > max_displacement:
+                    ratio = max_displacement / disp
+                    nx = ox + (nx - ox) * ratio
+                    ny = oy + (ny - oy) * ratio
+                nxt.append((nx, ny))
+            smoothed = nxt
+        return smoothed
 
     def _sample_spline_points(self) -> list[tuple[float, float]]:
         centerline = self.cfg["centerline"]

@@ -12,6 +12,9 @@ from typing import Any
 class TickRecord:
     tick: int
     sim_time_s: float
+    real_time_s: float
+    sim_delta_s: float
+    real_delta_s: float
     state: str
     decision_reason: str
     control_reason: str

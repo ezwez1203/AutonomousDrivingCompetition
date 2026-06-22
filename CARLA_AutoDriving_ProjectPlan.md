@@ -45,19 +45,19 @@ Objectives:
 - Generate OpenDRIVE from `config/track.yaml`.
 - Load the OpenDRIVE world into CARLA.
 - Place start lines, lap timers, crosswalk, parking zones, traffic light, and obstacle candidates.
-- Provide runtime debug drawing and optional actor placement.
+- Spawn smoothed runtime mesh lane/crosswalk markings and provide optional actor placement.
 
 Implemented components:
 
 - `maps/track_spec.py`
 - `maps/opendrive_gen.py`
 - `scripts/build_track.py`
+- `scripts/runtime_mesh_markings.py`
 - `scripts/phase1_draw_elements.py`
 - `scripts/phase1_place_actors.py`
 - `scripts/phase1_traffic_light_control.py`
 - `scripts/fit_track_from_blueprint.py`
 - `scripts/measure_track_accuracy.py`
-- `scripts/export_unreal_bake.py`
 
 The current track is derived from the available raster blueprint. It is good enough for control development, but it is still an approximation, not a perfect CAD import.
 

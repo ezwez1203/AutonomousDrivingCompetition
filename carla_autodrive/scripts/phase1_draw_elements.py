@@ -3,6 +3,7 @@
 
 Assumes the SKKU_AD_Track OpenDRIVE world is already loaded, for example:
     python -m carla_autodrive.scripts.build_track --load
+    python -m carla_autodrive.scripts.runtime_mesh_markings
     python -m carla_autodrive.scripts.phase1_draw_elements --duration 60
 """
 from __future__ import annotations
@@ -53,8 +54,8 @@ def color(name: str) -> carla.Color:
 
 def transform_from_pose(pose: TrackPose, z: float = 0.15) -> carla.Transform:
     return carla.Transform(
-        carla.Location(x=pose.x, y=pose.y, z=z),
-        carla.Rotation(yaw=math.degrees(pose.heading)),
+        carla.Location(x=pose.x, y=-pose.y, z=z),
+        carla.Rotation(yaw=math.degrees(-pose.heading)),
     )
 
 
@@ -64,7 +65,7 @@ def draw_box(world: carla.World, pose: TrackPose, label: str, length: float,
     tf = transform_from_pose(pose, z=height / 2.0)
     box = carla.BoundingBox(tf.location, carla.Vector3D(length / 2.0, width / 2.0, height / 2.0))
     world.debug.draw_box(box, tf.rotation, thickness=0.06, color=box_color, life_time=life_time)
-    label_loc = carla.Location(x=pose.x, y=pose.y, z=height + 0.8)
+    label_loc = carla.Location(x=pose.x, y=-pose.y, z=height + 0.8)
     world.debug.draw_string(label_loc, label, draw_shadow=False, color=box_color, life_time=life_time)
 
 
@@ -87,10 +88,13 @@ def draw_elements(world: carla.World, spec: TrackSpec, life_time: float) -> list
 
     crosswalk = elements["crosswalk"]
     crosswalk_pose = spec.road_center_pose(crosswalk["s"])
-    cw_length = spec.mm(dims["crosswalk_mm"][1])
-    cw_width = spec.mm(dims["crosswalk_mm"][0])
-    draw_box(world, crosswalk_pose, "CROSSWALK / SIGNAL", cw_length,
-             cw_width, 0.10, color("yellow"), life_time)
+    world.debug.draw_string(
+        carla.Location(x=crosswalk_pose.x, y=-crosswalk_pose.y, z=0.8),
+        "CROSSWALK / SIGNAL",
+        draw_shadow=False,
+        color=color("white"),
+        life_time=life_time,
+    )
     drawn.append(("crosswalk", crosswalk_pose))
 
     for key in ("parking_zone1", "parking_zone2"):

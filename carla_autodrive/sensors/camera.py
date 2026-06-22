@@ -9,8 +9,8 @@ from .base import SensorBase
 class RGBCamera(SensorBase):
     """Convert sensor.camera.rgb frames to BGRA numpy arrays with shape (H, W, 4)."""
 
-    def __init__(self, cfg: dict):
-        super().__init__("rgb_camera", cfg)
+    def __init__(self, cfg: dict, name: str = "rgb_camera"):
+        super().__init__(name, cfg)
         self.width = int(cfg["image_size_x"])
         self.height = int(cfg["image_size_y"])
 
@@ -33,6 +33,6 @@ class RGBCamera(SensorBase):
         if img is None:
             return "RGB  : (waiting for data)"
         bgr = img[:, :, :3]
-        return (f"RGB  : frame={frame} shape={img.shape} "
+        return (f"{self.name}: frame={frame} shape={img.shape} "
                 f"mean_BGR=({bgr[...,0].mean():.0f},"
                 f"{bgr[...,1].mean():.0f},{bgr[...,2].mean():.0f})")

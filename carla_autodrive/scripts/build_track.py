@@ -57,7 +57,7 @@ def load_into_carla(xodr: str, host: str, port: int, timeout: float = 120.0) -> 
     client.set_timeout(timeout)
 
     params = carla.OpendriveGenerationParameters(
-        vertex_distance=2.0,
+        vertex_distance=0.35,
         max_road_length=500.0,
         wall_height=0.0,        # no track boundary wall, flat driving surface
         additional_width=0.6,   # extra width beside each lane

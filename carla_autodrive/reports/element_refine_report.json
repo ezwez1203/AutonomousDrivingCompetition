@@ -1,0 +1,232 @@
+{
+  "image": "/home/lucius/바탕화면/AI 자율주행 경진대회/circuit_blueprint.png",
+  "track_yaml": "/home/lucius/바탕화면/AI 자율주행 경진대회/carla_autodrive/config/track.yaml",
+  "applied": true,
+  "green_components": 25,
+  "items": [
+    {
+      "name": "start_line",
+      "seed_px": [
+        1998.0,
+        3004.0
+      ],
+      "old_s": 11122.0,
+      "new_s": 11122.0,
+      "delta_s": 0.0,
+      "projection_error_mm": 612.3546095291786,
+      "right_offset_mm": 612.3546095291786,
+      "refined_px": [
+        1998.0,
+        3004.0
+      ]
+    },
+    {
+      "name": "laptimer_T1",
+      "seed_px": [
+        1998.0,
+        3004.0
+      ],
+      "old_s": 11122.0,
+      "new_s": 11122.0,
+      "delta_s": 0.0,
+      "projection_error_mm": 612.3546095291786,
+      "right_offset_mm": 612.3546095291786,
+      "refined_px": [
+        1998.0,
+        3004.0
+      ]
+    },
+    {
+      "name": "laptimer_T2",
+      "seed_px": [
+        3332.0,
+        1608.0
+      ],
+      "old_s": 4340.0,
+      "new_s": 4340.0,
+      "delta_s": 0.0,
+      "projection_error_mm": 2174.953532220928,
+      "right_offset_mm": 2174.953514091222,
+      "refined_px": [
+        3332.1,
+        1607.8
+      ]
+    },
+    {
+      "name": "laptimer_T3",
+      "seed_px": [
+        1781.0,
+        608.0
+      ],
+      "old_s": 23328.0,
+      "new_s": 23328.0,
+      "delta_s": 0.0,
+      "projection_error_mm": 494.2383164190167,
+      "right_offset_mm": 494.23831641901677,
+      "refined_px": [
+        1783.5,
+        602.0
+      ]
+    },
+    {
+      "name": "laptimer_T4",
+      "seed_px": [
+        908.0,
+        1632.0
+      ],
+      "old_s": 17016.0,
+      "new_s": 17016.0,
+      "delta_s": 0.0,
+      "projection_error_mm": 2087.059443548337,
+      "right_offset_mm": 2087.059443548337,
+      "refined_px": [
+        908.0,
+        1632.0
+      ]
+    },
+    {
+      "name": "crosswalk",
+      "seed_px": [
+        1781.0,
+        608.0
+      ],
+      "old_s": 23328.0,
+      "new_s": 23328.0,
+      "delta_s": 0.0,
+      "projection_error_mm": 494.2383164190167,
+      "right_offset_mm": 494.23831641901677,
+      "refined_px": [
+        1783.5,
+        602.0
+      ]
+    },
+    {
+      "name": "traffic_light",
+      "seed_px": [
+        1781.0,
+        608.0
+      ],
+      "old_s": 23328.0,
+      "new_s": 23328.0,
+      "delta_s": 0.0,
+      "projection_error_mm": 494.2383164190167,
+      "right_offset_mm": 494.23831641901677,
+      "refined_px": [
+        1783.5,
+        602.0
+      ]
+    },
+    {
+      "name": "obstacle_1",
+      "seed_px": [
+        3038.0,
+        1653.0
+      ],
+      "old_s": 4330.0,
+      "new_s": 4330.0,
+      "delta_s": 0.0,
+      "projection_error_mm": 971.5486024743391,
+      "right_offset_mm": 971.5486024743392,
+      "refined_px": [
+        3044.8,
+        1655.5
+      ]
+    },
+    {
+      "name": "obstacle_2_presets[0]",
+      "seed_px": [
+        3063.0,
+        1842.0
+      ],
+      "old_s": 5070.0,
+      "new_s": 5070.0,
+      "delta_s": 0.0,
+      "projection_error_mm": 917.0967554188397,
+      "right_offset_mm": 917.078341129123,
+      "refined_px": [
+        3061.5,
+        1879.0
+      ]
+    },
+    {
+      "name": "obstacle_2_presets[1]",
+      "seed_px": [
+        3088.0,
+        2034.0
+      ],
+      "old_s": 5590.0,
+      "new_s": 5590.0,
+      "delta_s": 0.0,
+      "projection_error_mm": 944.0890655533816,
+      "right_offset_mm": 944.009220248212,
+      "refined_px": [
+        3088.0,
+        2034.0
+      ]
+    },
+    {
+      "name": "obstacle_2_presets[2]",
+      "seed_px": [
+        3113.0,
+        2226.0
+      ],
+      "old_s": 6077.0,
+      "new_s": 6077.0,
+      "delta_s": 0.0,
+      "projection_error_mm": 923.9224194071911,
+      "right_offset_mm": 923.9224194071911,
+      "refined_px": [
+        3102.4,
+        2181.6
+      ]
+    },
+    {
+      "name": "obstacle_3_presets[0]",
+      "seed_px": [
+        3131.0,
+        2417.0
+      ],
+      "old_s": 6843.0,
+      "new_s": 6843.0,
+      "delta_s": 0.0,
+      "projection_error_mm": 995.2544539248253,
+      "right_offset_mm": 995.2544539248253,
+      "refined_px": [
+        3136.5,
+        2439.2
+      ]
+    },
+    {
+      "name": "obstacle_3_presets[1]",
+      "seed_px": [
+        3084.0,
+        2615.0
+      ],
+      "old_s": 7081.0,
+      "new_s": 7081.0,
+      "delta_s": 0.0,
+      "projection_error_mm": 930.3103945114938,
+      "right_offset_mm": 930.3103945114938,
+      "refined_px": [
+        3084.0,
+        2615.0
+      ]
+    },
+    {
+      "name": "obstacle_3_presets[2]",
+      "seed_px": [
+        2946.0,
+        2792.0
+      ],
+      "old_s": 7631.0,
+      "new_s": 7631.0,
+      "delta_s": 0.0,
+      "projection_error_mm": 780.1417745004683,
+      "right_offset_mm": 780.1417745004683,
+      "refined_px": [
+        2946.0,
+        2792.0
+      ]
+    }
+  ]
+}

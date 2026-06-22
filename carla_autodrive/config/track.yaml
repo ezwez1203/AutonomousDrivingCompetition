@@ -11,6 +11,8 @@ meta:
   modification_method: original_yaml_order_top_left_spur_removed
   source_yaml: carla_autodrive/track_yaml_pipeline/track_v11.yaml
   output_yaml: carla_autodrive/track_yaml_pipeline/track_v11_cleaned.yaml
+  elements_refined_by: refine_elements_from_blueprint.py
+  elements_refine_source_image: /home/lucius/바탕화면/AI 자율주행 경진대회/circuit_blueprint.png
 dimensions:
   field_mm:
   - 16000.0
@@ -35,6 +37,13 @@ calibration:
   - 3.383141
 lanes:
   count: 2
+  marks:
+    inner: solid
+    divider: broken
+    outer: solid
+  dash_length_mm: 300
+  dash_gap_mm: 300
+  crosswalk_stripes: 4
 centerline:
   mode: polyline
   coordinate_system: origin=field_top_left, x=right, y=down, unit=mm
@@ -45,6 +54,10 @@ centerline:
   estimated_length_mm: 25652.35
   mean_spacing_mm: 9.993
   max_spacing_mm: 10.112
+  smooth: true
+  smooth_window_m: 0.45
+  smooth_passes: 1
+  smooth_max_displacement_m: 0.25
   points:
   - x: 9158.3
     y: 2463.5
@@ -5194,71 +5207,200 @@ centerline:
     bridge_spacing_mm: 10.0
 elements:
   start_line:
-    s: 11120
+    s: 11122
     lane: 2
     source: circuit_blueprint.png
-    source_image_px: [1998, 3004]
-    note: "green marker 1 projected to lane center"
+    source_image_px:
+    - 1998
+    - 3004
+    note: green marker 1 projected to lane center
+    source_image_px_refined:
+    - 1998.0
+    - 3004.0
+    projection_error_mm: 612.4
   laptimer_T1:
-    s: 11120
+    s: 11122
     source: circuit_blueprint.png
-    source_image_px: [1998, 3004]
+    source_image_px:
+    - 1998
+    - 3004
+    source_image_px_refined:
+    - 1998.0
+    - 3004.0
+    projection_error_mm: 612.4
   laptimer_T2:
-    s: 4339
+    s: 4340
     source: circuit_blueprint.png
-    source_image_px: [3332, 1608]
-    note: "green marker 2 projected to nearest route s; marker text is outside road"
+    source_image_px:
+    - 3332
+    - 1608
+    note: green marker 2 projected to nearest route s; marker text is outside road
+    source_image_px_refined:
+    - 3332.1
+    - 1607.8
+    projection_error_mm: 2175.0
+    source_component_bbox_px:
+    - 3319
+    - 1601
+    - 26
+    - 15
   laptimer_T3:
-    s: 23318
+    s: 23328
     source: circuit_blueprint.png
-    source_image_px: [1781, 608]
-    note: "green marker 3 / crosswalk area"
+    source_image_px:
+    - 1781
+    - 608
+    note: green marker 3 / crosswalk area
+    source_image_px_refined:
+    - 1783.5
+    - 602.0
+    projection_error_mm: 494.2
+    source_component_bbox_px:
+    - 1681
+    - 602
+    - 206
+    - 1
   laptimer_T4:
-    s: 17017
+    s: 17016
     source: circuit_blueprint.png
-    source_image_px: [908, 1632]
-    note: "green marker 4 projected to nearest route s; marker text is outside road"
+    source_image_px:
+    - 908
+    - 1632
+    note: green marker 4 projected to nearest route s; marker text is outside road
+    source_image_px_refined:
+    - 908.0
+    - 1632.0
+    projection_error_mm: 2087.1
+    source_component_bbox_px:
+    - 896
+    - 1625
+    - 24
+    - 16
   crosswalk:
-    s: 23318
+    s: 23328
     source: circuit_blueprint.png
-    source_image_px: [1781, 608]
-    note: "crosswalk / traffic-light mission area"
+    source_image_px:
+    - 1781
+    - 608
+    note: crosswalk / traffic-light mission area
+    source_image_px_refined:
+    - 1783.5
+    - 602.0
+    projection_error_mm: 494.2
+    source_component_bbox_px:
+    - 1681
+    - 602
+    - 206
+    - 1
   traffic_light:
-    s: 23318
+    s: 23328
     side: right
     source: circuit_blueprint.png
-    source_image_px: [1781, 608]
-    note: "OpenDRIVE signal is generated from crosswalk.s"
+    source_image_px:
+    - 1781
+    - 608
+    note: OpenDRIVE signal is generated from crosswalk.s
+    source_image_px_refined:
+    - 1783.5
+    - 602.0
+    projection_error_mm: 494.2
+    source_component_bbox_px:
+    - 1681
+    - 602
+    - 206
+    - 1
   obstacle_1:
-    s: 4320
+    s: 4330
     lane: 1
     source: circuit_blueprint.png
-    source_image_px: [3038, 1653]
-    note: "fixed obstacle, right straight section"
+    source_image_px:
+    - 3038
+    - 1653
+    note: fixed obstacle, right straight section
+    source_image_px_refined:
+    - 3044.8
+    - 1655.5
+    projection_error_mm: 971.5
+    source_component_bbox_px:
+    - 3043
+    - 1651
+    - 5
+    - 10
   obstacle_2_presets:
-    - s: 4960
-      lane: 1
-      source_image_px: [3063, 1842]
-    - s: 5590
-      lane: 1
-      source_image_px: [3088, 2034]
-    - s: 6280
-      lane: 1
-      source_image_px: [3113, 2226]
+  - s: 5070
+    lane: 1
+    source_image_px:
+    - 3063
+    - 1842
+    source_image_px_refined:
+    - 3061.5
+    - 1879.0
+    projection_error_mm: 917.1
+    source_component_bbox_px:
+    - 3061
+    - 1872
+    - 2
+    - 15
+  - s: 5590
+    lane: 1
+    source_image_px:
+    - 3088
+    - 2034
+    source_image_px_refined:
+    - 3088.0
+    - 2034.0
+    projection_error_mm: 944.1
+  - s: 6077
+    lane: 1
+    source_image_px:
+    - 3113
+    - 2226
+    source_image_px_refined:
+    - 3102.4
+    - 2181.6
+    projection_error_mm: 923.9
+    source_component_bbox_px:
+    - 3101
+    - 2177
+    - 5
+    - 15
   obstacle_3_presets:
-    - s: 6780
-      lane: 2
-      source_image_px: [3131, 2417]
-    - s: 7080
-      lane: 2
-      source_image_px: [3084, 2615]
-    - s: 7630
-      lane: 2
-      source_image_px: [2946, 2792]
+  - s: 6843
+    lane: 2
+    source_image_px:
+    - 3131
+    - 2417
+    source_image_px_refined:
+    - 3136.5
+    - 2439.2
+    projection_error_mm: 995.3
+    source_component_bbox_px:
+    - 3136
+    - 2431
+    - 2
+    - 17
+  - s: 7081
+    lane: 2
+    source_image_px:
+    - 3084
+    - 2615
+    source_image_px_refined:
+    - 3084.0
+    - 2615.0
+    projection_error_mm: 930.3
+  - s: 7631
+    lane: 2
+    source_image_px:
+    - 2946
+    - 2792
+    source_image_px_refined:
+    - 2946.0
+    - 2792.0
+    projection_error_mm: 780.1
   parking_zone1:
     s: 10800
     lane: 1
-    note: "explicit slot pose restored for reverse perpendicular parking"
+    note: explicit slot pose restored for reverse perpendicular parking
     slot:
       x: 8033.2
       y: 9763.1
@@ -5269,7 +5411,7 @@ elements:
   parking_zone2:
     s: 7600
     lane: 1
-    note: "explicit slot pose restored for reverse perpendicular parking"
+    note: explicit slot pose restored for reverse perpendicular parking
     slot:
       x: 11238.7
       y: 9051.6

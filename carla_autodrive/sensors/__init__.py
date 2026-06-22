@@ -4,9 +4,11 @@ from .calibration import points_sensor_to_vehicle, sensor_to_vehicle_matrix, tra
 from .camera import RGBCamera
 from .frames import PerceptionInput
 from .lidar import Lidar
+from .monitoring import CameraMonitor, RunVideoRecorder, SignalComplianceRecorder
 from .radar import Radar
 from .recording import save_snapshot_npz
-from .stack import MultiRadar, SensorStack, expand_radar_configs
+from .stack import MultiCamera, MultiRadar, SensorStack, expand_camera_configs, expand_radar_configs
+from .ultrasonic import FrontUltrasonic, UltrasonicReading
 
 __all__ = [
     "SensorBase",
@@ -17,9 +19,16 @@ __all__ = [
     "RGBCamera",
     "Lidar",
     "Radar",
+    "FrontUltrasonic",
+    "UltrasonicReading",
+    "CameraMonitor",
+    "SignalComplianceRecorder",
+    "RunVideoRecorder",
+    "MultiCamera",
     "MultiRadar",
     "SensorStack",
     "PerceptionInput",
+    "expand_camera_configs",
     "expand_radar_configs",
     "save_snapshot_npz",
 ]
